@@ -4,6 +4,8 @@ const stallId = urlParams.get("id");
 
 const token = localStorage.getItem("token");
 
+const BASE_API_URL = "https://localbites-2.onrender.com"; 
+
 function getUserIdFromToken(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -26,7 +28,7 @@ const myUserRole = getUserRoleFromToken(token);
 
 const getStallDetails = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/stalls/${stallId}`);
+    const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}`);
     if (!res.ok) throw new Error("Stall not found");
     const stall = await res.json();
 
@@ -148,7 +150,7 @@ const getStallDetails = async () => {
         const reason = formData.get("reason").trim();
 
         const res = await fetch(
-          `http://localhost:5000/api/stalls/${stallId}/report`,
+          `${BASE_API_URL}/api/stalls/${stallId}/report`, // Use BASE_API_URL
           {
             method: "POST",
             headers: {
@@ -187,7 +189,7 @@ const getStallDetails = async () => {
       const firstTime = formData.get("firstTime") === "true";
       const userLocation = formData.get("userLocation");
 
-      const res = await fetch(`http://localhost:5000/api/stalls/${stallId}/react`, {
+      const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, { // Use BASE_API_URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emoji: selectedEmoji, text, firstTime, userLocation }),
@@ -233,7 +235,7 @@ function emojiToText(emoji) {
     case "love":
       return "❤️ Love";
     case "fire":
-      return "🔥 Spicy";
+    return "🔥 Spicy";
     case "meh":
       return "😐 Okay";
     case "thumbsUp":
