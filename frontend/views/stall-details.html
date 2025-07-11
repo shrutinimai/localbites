@@ -26,8 +26,8 @@
         }
         .stall-main-image {
             max-width: 100%;
-            height: 300px; 
-            object-fit: cover; 
+            height: 300px;
+            object-fit: cover;
             border-radius: 8px;
             margin-bottom: 25px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -50,11 +50,11 @@
         .info-group strong {
             color: #333;
             font-weight: 600;
-            width: 150px; 
+            width: 150px;
             text-align: left;
         }
         .info-group span {
-            flex: 1; 
+            flex: 1;
             text-align: right;
             color: #777;
         }
@@ -105,14 +105,14 @@
             color: #777;
         }
         #reaction-animation-container {
-            height: 50px; 
+            height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2em;
         }
         #reactionForm textarea, #reactionForm input[type="text"] {
-            width: calc(100% - 22px); 
+            width: calc(100% - 22px);
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ddd;
@@ -179,6 +179,8 @@
         const stallId = urlParams.get("id");
         const token = localStorage.getItem("token");
 
+        const BASE_API_URL = "https://localbites-2.onrender.com";
+
         if (!stallId) {
             stallContainer.innerHTML = "<p>Stall ID is missing.</p>";
         } else {
@@ -192,7 +194,7 @@
                     headers["Authorization"] = `Bearer ${token}`;
                 }
 
-                const res = await fetch(`http://localhost:5000/api/stalls/${stallId}`, { headers });
+                const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}`, { headers });
                 if (!res.ok) {
                     throw new Error("Failed to fetch stall details.");
                 }
@@ -303,7 +305,7 @@
                         data.firstTime = data.firstTime === "true";
 
                         try {
-                            const res = await fetch(`http://localhost:5000/api/stalls/${stallId}/react`, {
+                            const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
@@ -340,7 +342,7 @@
                         if (!reason) return alert("Report reason is required");
 
                         try {
-                            const res = await fetch(`http://localhost:5000/api/stalls/${stallId}/report`, {
+                            const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/report`, {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
