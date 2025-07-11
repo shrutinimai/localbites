@@ -4,6 +4,8 @@ const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
 const limitSelect = document.getElementById("limitSelect");
 
+const BASE_API_URL = "https://localbites-2.onrender.com"; 
+
 let currentPage = 1;
 let currentLimit = parseInt(limitSelect.value);
 let totalPages = 1;
@@ -24,8 +26,10 @@ const myUserId = getUserIdFromToken();
 async function fetchStalls(page = 1, limit = 5) {
   stallList.innerHTML = "Loading stalls...";
   try {
+    // --- IMPORTANT CHANGE HERE ---
+    // Prepend BASE_API_URL to the API endpoint
     const res = await fetch(
-      `http://localhost:5000/api/stalls?page=${page}&limit=${limit}`
+      `${BASE_API_URL}/api/stalls?page=${page}&limit=${limit}`
     );
     if (!res.ok) throw new Error("Failed to load stalls");
     const data = await res.json();
