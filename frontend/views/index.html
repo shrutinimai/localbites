@@ -23,6 +23,7 @@
 
   <script>
     const token = localStorage.getItem("token");
+    const BASE_API_URL = "https://localbites-2.onrender.com";
 
     async function fetchUser() {
       if (!token) {
@@ -36,7 +37,7 @@
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/users/me", {
+        const res = await fetch(`${BASE_API_URL}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
