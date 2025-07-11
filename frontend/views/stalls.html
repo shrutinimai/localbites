@@ -44,7 +44,7 @@
 
         .stall-card img {
             max-width: 100%;
-            height: 200px; 
+            height: 200px;
             object-fit: cover;
             border-radius: 6px;
             margin-bottom: 15px;
@@ -123,7 +123,7 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1em;
-            flex: 1; 
+            flex: 1;
             min-width: 150px;
         }
 
@@ -155,7 +155,7 @@
         .owner-tag {
             font-size: 0.8em;
             font-weight: 500;
-            color: #28a745; 
+            color: #28a745;
             margin-left: 8px;
             background-color: #e6ffe6;
             padding: 3px 8px;
@@ -227,6 +227,7 @@
         let currentPage = 1;
 
         const token = localStorage.getItem("token");
+        const BASE_API_URL = "https://localbites-2.onrender.com";
 
         if (token) {
             addStallBtn.style.display = "inline-block";
@@ -254,7 +255,7 @@
             const name = searchNameInput.value;
             const city = searchCityInput.value;
             const category = filterCategorySelect.value;
-            const limit = stallsPerPageSelect.value; 
+            const limit = stallsPerPageSelect.value;
 
             let query = `page=${currentPage}&limit=${limit}`;
             if (name) query += `&name=${encodeURIComponent(name)}`;
@@ -262,7 +263,7 @@
             if (category) query += `&foodCategory=${encodeURIComponent(category)}`;
 
             try {
-                const res = await fetch(`http://localhost:5000/api/stalls?${query}`);
+                const res = await fetch(`${BASE_API_URL}/api/stalls?${query}`);
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
@@ -329,12 +330,12 @@
         });
 
         applyFiltersBtn.addEventListener("click", () => {
-            currentPage = 1; 
+            currentPage = 1;
             fetchStalls();
         });
 
         stallsPerPageSelect.addEventListener("change", () => {
-            currentPage = 1; 
+            currentPage = 1;
             fetchStalls();
         });
 
