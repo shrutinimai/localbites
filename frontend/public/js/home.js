@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const stallList = document.getElementById("stall-list");
 
+  const BASE_API_URL = "https://localbites-2.onrender.com";
+
   function getUserIdFromToken(token) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -14,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const currentUserId = token ? getUserIdFromToken(token) : null;
 
   try {
-    const res = await fetch("/api/stalls");
+    const res = await fetch(`${BASE_API_URL}/api/stalls`);
     if (!res.ok) throw new Error("Failed to fetch stalls");
     const stalls = await res.json();
 
