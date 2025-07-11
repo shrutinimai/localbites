@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stall Details</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .stall-details-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .stall-details-container h2 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        .stall-main-image {
+            max-width: 100%;
+            height: 300px; 
+            object-fit: cover; 
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .info-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .info-group:last-of-type {
+            border-bottom: none;
+        }
+        .info-group p {
+            margin: 0;
+            color: #555;
+            font-size: 1.1em;
+        }
+        .info-group strong {
+            color: #333;
+            font-weight: 600;
+            width: 150px; 
+            text-align: left;
+        }
+        .info-group span {
+            flex: 1; 
+            text-align: right;
+            color: #777;
+        }
+        .reactions-section, .feedback-section, .visitor-stats, #reportSection {
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .reactions-section h3, .feedback-section h3, .visitor-stats h3, #reportSection h3 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .reactions-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .reaction-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            font-size: 1.5em;
+            color: #555;
+        }
+        .reaction-btn:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-3px);
+        }
+        .reaction-btn i {
+            margin-bottom: 5px;
+        }
+        .reaction-btn .reaction-count {
+            font-size: 0.8em;
+            color: #777;
+        }
+        #reaction-animation-container {
+            height: 50px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+        }
+        #reactionForm textarea, #reactionForm input[type="text"] {
+            width: calc(100% - 22px); 
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        #reactionForm .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        #reactionForm .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1em;
+            color: #555;
+        }
+        #reportSection .report-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        #reportsList {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            text-align: left;
+        }
+        #reportsList p {
+            background-color: #ffebeb;
+            border-left: 5px solid #dc3545;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: #491217;
+        }
+        .visitor-stats p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body class="bg-stalls">
+    <div class="main-container stall-details-container">
+        <div id="stallContainer">
+            <p>Loading stall details...</p>
+        </div>
+    </div>
+
+    <script>
+        const stallContainer = document.getElementById("stallContainer");
+        const urlParams = new URLSearchParams(window.location.search);
+        const stallId = urlParams.get("id");
+        const token = localStorage.getItem("token");
+
+        if (!stallId) {
+            stallContainer.innerHTML = "<p>Stall ID is missing.</p>";
+        } else {
+            getStallDetails();
+        }
+
+        async function getStallDetails() {
+            try {
+                const headers = {};
+                if (token) {
+                    headers["Authorization"] = `Bearer ${token}`;
+                }
+
+                const res = await fetch(`http://localhost:5000/api/stalls/${stallId}`, { headers });
+                if (!res.ok) {
+                    throw new Error("Failed to fetch stall details.");
+                }
+                const stall = await res.json();
+
+                let currentUserId = null;
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        currentUserId = payload.userId;
+                    } catch (e) {
+                        console.error("Error decoding token:", e);
+                    }
+                }
+
+                let alreadyReported = false;
+
+                stallContainer.innerHTML = `
+                    <h2>${stall.name}</h2>
+                    <img src="${stall.imageUrl}" alt="${stall.name}" class="stall-main-image"/>
+                    <div class="info-group"><p><strong>Location:</strong> <span>${stall.city}, ${stall.area}</span></p></div>
+                    <div class="info-group"><p><strong>Food Item:</strong> <span>${stall.foodItem}</span></p></div>
+                    <div class="info-group"><p><strong>Category:</strong> <span>${stall.foodCategory}</span></p></div>
+                    <div class="info-group"><p><strong>Food Info:</strong> <span>${stall.foodInfo}</span></p></div>
+                    <div class="info-group"><p><strong>Description:</strong> <span>${stall.description || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Hygiene Rating:</strong> <span>${stall.hygieneRating || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Taste Rating:</strong> <span>${stall.tasteRating || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Price Range:</strong> <span>${stall.priceRange || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Timings:</strong> <span>${stall.openingTime || 'N/A'} - ${stall.closingTime || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Rush Hours:</strong> <span>${stall.rushHours || 'N/A'}</span></p></div>
+                    <div class="info-group"><p><strong>Accepts GPay:</strong> <span>${stall.acceptsGpay ? "Yes" : "No"}</span></p></div>
+
+                    <div class="reactions-section">
+                        <h3>Reactions</h3>
+                        <div class="reactions-buttons">
+                            <button type="button" class="reaction-btn" data-reaction-type="love">
+                                <i class="fas fa-heart"></i> <span class="reaction-count">${stall.emojiReactions?.love || 0}</span>
+                            </button>
+                            <button type="button" class="reaction-btn" data-reaction-type="fire">
+                                <i class="fas fa-fire"></i> <span class="reaction-count">${stall.emojiReactions?.fire || 0}</span>
+                            </button>
+                            <button type="button" class="reaction-btn" data-reaction-type="meh">
+                                <i class="fas fa-meh"></i> <span class="reaction-count">${stall.emojiReactions?.meh || 0}</span>
+                            </button>
+                            <button type="button" class="reaction-btn" data-reaction-type="thumbsUp">
+                                <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${stall.emojiReactions?.thumbsUp || 0}</span>
+                            </button>
+                        </div>
+                        <div id="reaction-animation-container"></div>
+                    </div>
+
+                    <form id="reactionForm">
+                        <h3>Share Your Feedback</h3>
+                        <input type="hidden" name="emoji" id="selectedEmoji" value="love" />
+                        <textarea name="text" placeholder="Write your thoughts..." required></textarea><br/>
+                        <div class="radio-group">
+                            <label><input type="radio" name="firstTime" value="true" required /> First Time</label>
+                            <label><input type="radio" name="firstTime" value="false" required /> Repeat Visit</label>
+                        </div><br/>
+                        <input type="text" name="userLocation" placeholder="Your City" required /><br/>
+                        <button type="submit" class="btn">Submit Feedback</button>
+                    </form>
+
+                    <div class="visitor-stats">
+                        <h3>Visitor Stats</h3>
+                        <p>First-time Visitors: ${stall.firstTimeCount || 0}</p>
+                        <p>Repeat Visitors: ${stall.repeatCount || 0}</p>
+                    </div>
+
+                    <div id="reportSection">
+                        <h3>Report this stall</h3>
+                        <p><strong>Reports:</strong> <span id="currentReportCount">${stall.reportCount || 0}</span></p>
+                        ${token ? `
+                            <div class="report-actions">
+                                <button id="reportBtn" class="btn btn-danger">Report Stall</button>
+                            </div>
+                        ` : '<p>Please login to report this stall.</p>'}
+                    </div>
+                `;
+
+                const reactionForm = document.getElementById("reactionForm");
+                const selectedEmojiInput = document.getElementById("selectedEmoji");
+                const reactionButtons = document.querySelectorAll(".reaction-btn");
+                const reactionAnimationContainer = document.getElementById("reaction-animation-container");
+
+                reactionButtons.forEach(button => {
+                    button.addEventListener("click", () => {
+                        const emojiType = button.dataset.reactionType;
+                        selectedEmojiInput.value = emojiType;
+
+                        reactionAnimationContainer.innerHTML = `<span style="animation: fadeOut 1s forwards;">${getEmojiIcon(emojiType)}</span>`;
+
+                        const countSpan = button.querySelector(".reaction-count");
+                        countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                    });
+                });
+
+                if (reactionForm) {
+                    reactionForm.addEventListener("submit", async (e) => {
+                        e.preventDefault();
+                        if (!token) {
+                            alert("You need to be logged in to submit feedback.");
+                            return;
+                        }
+
+                        const formData = new FormData(reactionForm);
+                        const data = Object.fromEntries(formData.entries());
+                        data.firstTime = data.firstTime === "true";
+
+                        try {
+                            const res = await fetch(`http://localhost:5000/api/stalls/${stallId}/react`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },
+                                body: JSON.stringify(data),
+                            });
+
+                            if (!res.ok) throw new Error("Failed to submit reaction.");
+                            alert("Feedback submitted successfully!");
+                            getStallDetails();
+                        } catch (err) {
+                            alert(err.message);
+                        }
+                    });
+                }
+
+                function getEmojiIcon(type) {
+                    switch (type) {
+                        case 'love': return '❤️';
+                        case 'fire': return '🔥';
+                        case 'meh': return '😐';
+                        case 'thumbsUp': return '👍';
+                        default: return '';
+                    }
+                }
+
+                const reportBtn = document.getElementById("reportBtn");
+
+                if (reportBtn && token) {
+
+                    reportBtn.addEventListener("click", async () => {
+                        const reason = prompt("Please enter reason for reporting this stall:");
+                        if (!reason) return alert("Report reason is required");
+
+                        try {
+                            const res = await fetch(`http://localhost:5000/api/stalls/${stallId}/report`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ reason }),
+                            });
+                            if (!res.ok) {
+                                const errorData = await res.json();
+                                throw new Error(errorData.message || "Failed to submit report");
+                            }
+                            const data = await res.json();
+
+                            alert("Report submitted. Thank you!");
+                            if (data.message === "Report submitted") {
+                                reportBtn.disabled = true;
+                                reportBtn.textContent = "You already reported this stall";
+                            }
+                            document.getElementById('currentReportCount').textContent = data.currentReportCount;
+                        } catch (err) {
+                            alert(err.message);
+                        }
+                    });
+                }
+
+            } catch (err) {
+                console.error("Error fetching stall details:", err);
+                stallContainer.innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

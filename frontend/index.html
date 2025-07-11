@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LocalBites</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-home" >
+  <div class="container">
+    <div class="intro-section">
+      <h1>Discover LocalBites</h1>
+      <p>Explore budget-friendly, traditional food stalls shared by locals & owners!</p>
+      <h2>🍲 Explore Local Food Stalls</h2>
+<div id="stall-list" class="stall-list"></div>
+
+      <img src="/images/localbites-banner.jpg" alt="Local Food" class="intro-image" />
+    </div>
+
+    <div id="user-section">
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    async function fetchUser() {
+      if (!token) {
+        document.getElementById("user-section").innerHTML = `
+          <div class="auth-links">
+            <a href="/login"><button>Login</button></a>
+            <a href="/signup"><button>Sign Up</button></a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:5000/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const user = await res.json();
+
+        if (res.ok) {
+          const isOwner = user.role === "owner";
+          document.getElementById("user-section").innerHTML = `
+            <h2>Welcome, ${user.name} (${user.role})!</h2>
+            <p>You can explore or post about hidden food gems.</p>
+            ${isOwner ? '<a href="/add-stall"><button>Add Stall</button></a>' : ''}
+            <button onclick="logout()">Logout</button>
+          `;
+        } else {
+          throw new Error("Invalid token");
+        }
+      } catch (err) {
+        localStorage.removeItem("token");
+        document.getElementById("user-section").innerHTML = `
+          <p>Session expired. Please <a href="/login">login</a> again.</p>
+        `;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      alert("Logged out");
+      window.location.reload();
+    }
+
+    fetchUser();
+  </script>
+  <script src="/js/home.js"></script>
+
+</body>
+</html>
