@@ -1,14 +1,15 @@
-
 const stallList = document.getElementById("stallList");
+
+const BASE_API_URL = "https://localbites-2.onrender.com"; 
 
 const fetchStalls = async () => {
   try {
-    const res = await fetch("http://localhost:5000/api/stalls");
+    const res = await fetch(`${BASE_API_URL}/api/stalls`);
     const stalls = await res.json();
 
     stallList.innerHTML = stalls.map(stall => {
-      const roleTag = stall.postedRole === "owner" 
-        ? '<span class="posted-by owner">👑 Posted by: Owner</span>' 
+      const roleTag = stall.postedRole === "owner"
+        ? '<span class="posted-by owner">👑 Posted by: Owner</span>'
         : '<span class="posted-by">Posted by: Foodie</span>';
 
       return `
@@ -27,7 +28,8 @@ const fetchStalls = async () => {
       `;
     }).join("");
   } catch (err) {
-    stallList.innerHTML = '<p>Error loading stalls.</p>';
+    console.error("Error fetching stalls:", err); 
+    stallList.innerHTML = '<p>Error loading stalls. Please try again later.</p>';
   }
 };
 
