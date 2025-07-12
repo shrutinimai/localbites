@@ -1,132 +1,129 @@
-const stallList = document.getElementById("stallList");
-const pageNumbersContainer = document.getElementById("pageNumbers");
+const stallsList = document.getElementById("stallsList");
 const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
-const limitSelect = document.getElementById("limitSelect");
+const currentPageSpan = document.getElementById("currentPageSpan");
+const addStallBtn = document.getElementById("addStallBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-const BASE_API_URL = "https://localbites-2.onrender.com"; 
+const searchNameInput = document.getElementById("searchName");
+const searchCityInput = document.getElementById("searchCity");
+const filterCategorySelect = document.getElementById("filterCategory");
+const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+const stallsPerPageSelect = document.getElementById("stallsPerPage");
 
 let currentPage = 1;
-let currentLimit = parseInt(limitSelect.value);
-let totalPages = 1;
 
-function getUserIdFromToken() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.userId;
-  } catch {
-    return null;
-  }
+const BASE_API_URL = "https://localbites-2.onrender.com"; // Your deployed backend URL
+const token = localStorage.getItem("token");
+
+if (token) {
+    addStallBtn.style.display = "inline-block";
+    logoutBtn.style.display = "inline-block";
+} else {
+    addStallBtn.style.display = "none";
+    logoutBtn.style.display = "none";
 }
 
-const myUserId = getUserIdFromToken();
+addStallBtn.addEventListener("click", () => {
+    window.location.href = "/add-stall";
+});
 
-async function fetchStalls(page = 1, limit = 5) {
-  stallList.innerHTML = "Loading stalls...";
-  try {
-    // --- IMPORTANT CHANGE HERE ---
-    // Prepend BASE_API_URL to the API endpoint
-    const res = await fetch(
-      `${BASE_API_URL}/api/stalls?page=${page}&limit=${limit}`
-    );
-    if (!res.ok) throw new Error("Failed to load stalls");
-    const data = await res.json();
+logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    alert("You have been logged out.");
+    window.location.href = "/login";
+});
 
-    totalPages = data.pagination.totalPages;
-    currentPage = data.pagination.page;
-    currentLimit = data.pagination.limit;
+async function fetchStalls() {
+    stallsList.innerHTML = "<p class='loading-message'>Loading stalls...</p>";
+    prevPageBtn.disabled = true;
+    nextPageBtn.disabled = true;
 
-    if (data.stalls.length === 0) {
-      stallList.innerHTML = "<p>No stalls found.</p>";
-      pageNumbersContainer.innerHTML = "";
-      return;
+    const name = searchNameInput.value;
+    const city = searchCityInput.value;
+    const category = filterCategorySelect.value;
+    const limit = stallsPerPageSelect.value; 
+
+    let query = `page=${currentPage}&limit=${limit}`;
+    if (name) query += `&name=${encodeURIComponent(name)}`;
+    if (city) query += `&city=${encodeURIComponent(city)}`;
+    if (category) query += `&foodCategory=${encodeURIComponent(category)}`;
+
+    try {
+        const res = await fetch(`${BASE_API_URL}/api/stalls?${query}`); // Corrected API URL
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        renderStalls(data.stalls);
+        updatePagination(data.pagination);
+    } catch (error) {
+        console.error("Error fetching stalls:", error);
+        stallsList.innerHTML = "<p class='no-stalls-message'>Failed to load stalls. Please try again later.</p>";
     }
-
-    renderStalls(data.stalls);
-    renderPagination();
-  } catch (err) {
-    stallList.innerHTML = `<p>Error loading stalls: ${err.message}</p>`;
-  }
 }
 
 function renderStalls(stalls) {
-  stallList.innerHTML = "";
-  stalls.forEach((stall) => {
-    const isMine = stall.postedBy && stall.postedBy._id === myUserId; // Use _id for comparison
-    const isPostedByOwner = stall.postedBy && stall.postedBy.role === "owner";
-
-    const div = document.createElement("div");
-    div.className = "stall";
-    if (isMine) {
-      div.classList.add("mine"); // add a class to style your own stalls differently
+    stallsList.innerHTML = "";
+    if (stalls.length === 0) {
+        stallsList.innerHTML = "<p class='no-stalls-message'>No stalls found matching your criteria.</p>";
+        return;
     }
-    div.innerHTML = `
-      <h3>${stall.name} ${isMine ? '<span style="color:#00b894;">(You)</span>' : ''}</h3>
-      ${isPostedByOwner ? '<p style="font-weight: bold; color: green; margin-top: -5px;">Posted by Owner</p>' : ''}
-      <p><strong>Category:</strong> ${stall.foodCategory}</p>
-      <p><strong>City:</strong> ${stall.city}</p>
-      <p><strong>Food Item:</strong> ${stall.foodItem || "N/A"}</p>
-    `;
-    div.addEventListener("click", () => {
-      window.location.href = `stall-details.html?id=${stall._id}`;
+
+    stalls.forEach((stall) => {
+        const stallCard = document.createElement("div");
+        stallCard.classList.add("stall-card");
+
+        const isPostedByOwner = stall.postedBy && stall.postedBy.role === "owner";
+        const ownerTag = isPostedByOwner ? `<span class="owner-tag">Posted by Owner</span>` : '';
+
+        stallCard.innerHTML = `
+            <img src="${stall.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="${stall.name}">
+            <h2>${stall.name} ${ownerTag}</h2> <p><strong>Owner:</strong> ${stall.ownerName}</p>
+            <p><strong>Location:</strong> ${stall.city}, ${stall.area}</p>
+            <p><strong>Category:</strong> ${stall.foodCategory}</p>
+            <p><strong>Food Item:</strong> ${stall.foodItem}</p>
+            <p><strong>Accepts GPay:</strong> ${stall.acceptsGpay ? "Yes" : "No"}</p>
+            <button class="details-btn" data-id="${stall._id}">View Details</button>
+        `;
+        stallsList.appendChild(stallCard);
     });
-    stallList.appendChild(div);
-  });
+
+    document.querySelectorAll(".details-btn").forEach((button) => {
+        button.addEventListener("click", (e) => {
+            const stallId = e.target.dataset.id;
+            window.location.href = `/stall-details?id=${stallId}`;
+        });
+    });
 }
 
-function renderPagination() {
-  pageNumbersContainer.innerHTML = "";
-
-  const maxPagesToShow = 5;
-  let startPage = Math.max(1, currentPage - 2);
-  let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-  if (endPage - startPage < maxPagesToShow - 1) {
-    startPage = Math.max(1, endPage - maxPagesToShow + 1);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = i;
-    if (i === currentPage) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      if (i !== currentPage) fetchStalls(i, currentLimit);
-    });
-    pageNumbersContainer.appendChild(btn);
-  }
-
-  prevPageBtn.disabled = currentPage === 1;
-  nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+function updatePagination(pagination) {
+    const { total, page, limit, totalPages } = pagination;
+    currentPageSpan.textContent = `Page ${page} of ${totalPages}`;
+    prevPageBtn.disabled = page === 1;
+    nextPageBtn.disabled = page === totalPages;
 }
 
 prevPageBtn.addEventListener("click", () => {
-  if (currentPage > 1) {
-    fetchStalls(currentPage - 1, currentLimit);
-  }
+    if (currentPage > 1) {
+        currentPage--;
+        fetchStalls();
+    }
 });
 
 nextPageBtn.addEventListener("click", () => {
-  if (currentPage < totalPages) {
-    fetchStalls(currentPage + 1, currentLimit);
-  }
+    currentPage++;
+    fetchStalls();
 });
 
-limitSelect.addEventListener("change", () => {
-  currentLimit = parseInt(limitSelect.value);
-  fetchStalls(1, currentLimit);
+applyFiltersBtn.addEventListener("click", () => {
+    currentPage = 1; 
+    fetchStalls();
 });
 
-const style = document.createElement("style");
-style.textContent = `
-  .stall.mine {
-    border: 2px solid #00b894;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: #eaffea;
-  }
-`;
-document.head.appendChild(style);
+stallsPerPageSelect.addEventListener("change", () => {
+    currentPage = 1; 
+    fetchStalls();
+});
 
-fetchStalls(currentPage, currentLimit);
+fetchStalls();
