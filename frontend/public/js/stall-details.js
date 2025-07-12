@@ -1,248 +1,198 @@
-const stallContainer = document.getElementById("stallDetails");
+const stallContainer = document.getElementById("stallContainer");
 const urlParams = new URLSearchParams(window.location.search);
 const stallId = urlParams.get("id");
-
 const token = localStorage.getItem("token");
 
-const BASE_API_URL = "https://localbites-2.onrender.com"; 
+const BASE_API_URL = "https://localbites-2.onrender.com";
 
-function getUserIdFromToken(token) {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.userId;
-  } catch {
-    return null;
-  }
-}
-function getUserRoleFromToken(token) {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.role;
-  } catch {
-    return null;
-  }
+if (!stallId) {
+    stallContainer.innerHTML = "<p>Stall ID is missing.</p>";
+} else {
+    getStallDetails();
 }
 
-const myUserId = getUserIdFromToken(token);
-const myUserRole = getUserRoleFromToken(token);
-
-const getStallDetails = async () => {
-  try {
-    const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}`);
-    if (!res.ok) throw new Error("Stall not found");
-    const stall = await res.json();
-
-    let userReported = false;
-    if (token && stall.reports && stall.reports.length > 0) {
-      userReported = stall.reports.some(
-        (r) => r.reportedBy && r.reportedBy._id === myUserId
-      );
-    }
-
-    const isPostedByOwner = stall.postedBy && stall.postedBy.role === "owner";
-    const postedByText = isPostedByOwner
-      ? `<span style="font-style: italic; color: green;">(Posted by Owner)</span>`
-      : "";
-
-    stallContainer.innerHTML = `
-      <h2>${stall.name} ${postedByText}</h2>
-      <img src="${
-        stall.imageUrl
-      }" alt="${stall.name}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px;"/>
-      <p><strong>Location:</strong> ${stall.city}, ${stall.area}</p>
-      <p><strong>Food Item:</strong> ${stall.foodItem}</p>
-      <p><strong>Category:</strong> ${stall.foodCategory}</p>
-      <p><strong>Food Info:</strong> ${stall.foodInfo}</p>
-      <p><strong>Hygiene Rating:</strong> ${stall.hygieneRating}</p>
-      <p><strong>Taste Rating:</strong> ${stall.tasteRating}</p>
-      <p><strong>Price Range:</strong> ${stall.priceRange}</p>
-      <p><strong>Timings:</strong> ${stall.openingTime} - ${stall.closingTime}</p>
-      <p><strong>Rush Hours:</strong> ${stall.rushHours}</p>
-      <p><strong>Accepts GPay:</strong> ${stall.acceptsGpay ? "Yes" : "No"}</p>
-
-      <div>
-        <h3>Reactions</h3>
-        <button onclick="setSelectedEmoji('love')">❤️ Love (${
-          stall.emojiReactions?.love || 0
-        })</button>
-        <button onclick="setSelectedEmoji('fire')">🔥 Spicy (${
-          stall.emojiReactions?.fire || 0
-        })</button>
-        <button onclick="setSelectedEmoji('meh')">😐 Okay (${
-          stall.emojiReactions?.meh || 0
-        })</button>
-        <button onclick="setSelectedEmoji('thumbsUp')">👍 Tasty (${
-          stall.emojiReactions?.thumbsUp || 0
-        })</button>
-        <br/><br/>
-        <form id="reactionForm">
-          <textarea name="text" placeholder="Write your thoughts..." required></textarea><br/>
-          <label><input type="radio" name="firstTime" value="true" required /> First Time</label>
-          <label><input type="radio" name="firstTime" value="false" required /> Repeat Visit</label><br/>
-          <input type="text" name="userLocation" placeholder="Your City" required /><br/>
-          <button type="submit">Submit Feedback</button>
-        </form>
-      </div>
-
-      <h3>Visitor Stats</h3>
-      <p>First-time Visitors: ${stall.firstTimeCount}</p>
-      <p>Repeat Visitors: ${stall.repeatCount}</p>
-
-      <hr/>
-      <h3>Visitor Reviews</h3>
-      <div id="reviewsContainer">${renderReviews(stall.reviews)}</div>
-
-      <hr/>
-      <h3>Report this Stall</h3>
-      <div id="reportSection">
-        ${
-          token
-            ? userReported
-              ? `<p>You have already reported this stall.</p>`
-              : `<form id="reportForm">
-                <textarea name="reason" placeholder="Reason for reporting" required minlength="5"></textarea><br/>
-                <button type="submit">Submit Report</button>
-              </form>`
-            : `<p>Please login to report this stall.</p>`
+async function getStallDetails() {
+    try {
+        const headers = {};
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
         }
-        <p>Current Reports: <span id="reportCountDisplay">${
-          stall.reportCount || 0
-        }</span></p>
-        ${
-          (myUserRole === "admin" && stall.reportCount > 0)
-            ? `<button id="viewAllReportsBtn">View All Reports (${
-                stall.reportCount || 0
-              })</button>`
-            : ""
+
+        const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}`, { headers });
+        if (!res.ok) {
+            throw new Error("Failed to fetch stall details.");
         }
-      </div>
+        const stall = await res.json();
 
-      <div id="reportsList" style="display:none;">
-        <h4>Detailed Reports</h4>
-        <ul>
-          ${
-            stall.reports && stall.reports.length > 0
-              ? stall.reports
-                  .map(
-                    (r) =>
-                      `<li><strong>${r.reportedBy?.name || "Anonymous"}:</strong> ${
-                        r.reason
-                      } <br> <small>(${new Date(r.reportedAt).toLocaleDateString()} ${new Date(r.reportedAt).toLocaleTimeString()})</small></li>`
-                  )
-                  .join("")
-              : "<li>No detailed reports available.</li>"
-          }
-        </ul>
-      </div>
-    `;
-
-    if (myUserRole === "admin" && stall.reportCount > 0) {
-      document.getElementById("viewAllReportsBtn")?.addEventListener("click", () => {
-        const repList = document.getElementById("reportsList");
-        repList.style.display = repList.style.display === "none" ? "block" : "none";
-      });
-    }
-
-    if (token && !userReported) {
-      document.getElementById("reportForm")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const reason = formData.get("reason").trim();
-
-        const res = await fetch(
-          `${BASE_API_URL}/api/stalls/${stallId}/report`, // Use BASE_API_URL
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ reason }),
-          }
-        );
-
-        const data = await res.json();
-        if (res.ok) {
-          alert("Report submitted successfully.");
-          document.getElementById("reportCountDisplay").textContent =
-            data.currentReportCount;
-          document.getElementById("reportSection").innerHTML =
-            `<p>You have already reported this stall.</p><p>Current Reports: <span id="reportCountDisplay">${data.currentReportCount}</span></p>`;
-
-          if (data.status === "reported_for_review") {
-            alert("This stall has reached the report threshold and is now under review by admins.");
-          }
-        } else {
-          alert(data.error || data.message || "Failed to submit report.");
+        let currentUserId = null;
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentUserId = payload.userId;
+            } catch (e) {
+                console.error("Error decoding token:", e);
+            }
         }
-      });
+
+        let alreadyReported = false;
+
+        stallContainer.innerHTML = `
+            <h2>${stall.name}</h2>
+            <img src="${stall.imageUrl}" alt="${stall.name}" class="stall-main-image"/>
+            <div class="info-group"><p><strong>Location:</strong> <span>${stall.city}, ${stall.area}</span></p></div>
+            <div class="info-group"><p><strong>Food Item:</strong> <span>${stall.foodItem}</span></p></div>
+            <div class="info-group"><p><strong>Category:</strong> <span>${stall.foodCategory}</span></p></div>
+            <div class="info-group"><p><strong>Food Info:</strong> <span>${stall.foodInfo}</span></p></div>
+            <div class="info-group"><p><strong>Description:</strong> <span>${stall.description || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Hygiene Rating:</strong> <span>${stall.hygieneRating || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Taste Rating:</strong> <span>${stall.tasteRating || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Price Range:</strong> <span>${stall.priceRange || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Timings:</strong> <span>${stall.openingTime || 'N/A'} - ${stall.closingTime || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Rush Hours:</strong> <span>${stall.rushHours || 'N/A'}</span></p></div>
+            <div class="info-group"><p><strong>Accepts GPay:</strong> <span>${stall.acceptsGpay ? "Yes" : "No"}</span></p></div>
+
+            <div class="reactions-section">
+                <h3>Reactions</h3>
+                <div class="reactions-buttons">
+                    <button type="button" class="reaction-btn" data-reaction-type="love">
+                        <i class="fas fa-heart"></i> <span class="reaction-count">${stall.emojiReactions?.love || 0}</span>
+                    </button>
+                    <button type="button" class="reaction-btn" data-reaction-type="fire">
+                        <i class="fas fa-fire"></i> <span class="reaction-count">${stall.emojiReactions?.fire || 0}</span>
+                    </button>
+                    <button type="button" class="reaction-btn" data-reaction-type="meh">
+                        <i class="fas fa-meh"></i> <span class="reaction-count">${stall.emojiReactions?.meh || 0}</span>
+                    </button>
+                    <button type="button" class="reaction-btn" data-reaction-type="thumbsUp">
+                        <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${stall.emojiReactions?.thumbsUp || 0}</span>
+                    </button>
+                </div>
+                <div id="reaction-animation-container"></div>
+            </div>
+
+            <form id="reactionForm">
+                <h3>Share Your Feedback</h3>
+                <input type="hidden" name="emoji" id="selectedEmoji" value="love" />
+                <textarea name="text" placeholder="Write your thoughts..." required></textarea><br/>
+                <div class="radio-group">
+                    <label><input type="radio" name="firstTime" value="true" required /> First Time</label>
+                    <label><input type="radio" name="firstTime" value="false" required /> Repeat Visit</label>
+                </div><br/>
+                <input type="text" name="userLocation" placeholder="Your City" required /><br/>
+                <button type="submit" class="btn">Submit Feedback</button>
+            </form>
+
+            <div class="visitor-stats">
+                <h3>Visitor Stats</h3>
+                <p>First-time Visitors: ${stall.firstTimeCount || 0}</p>
+                <p>Repeat Visitors: ${stall.repeatCount || 0}</p>
+            </div>
+
+            <div id="reportSection">
+                <h3>Report this stall</h3>
+                <p><strong>Reports:</strong> <span id="currentReportCount">${stall.reportCount || 0}</span></p>
+                ${token ? `
+                    <div class="report-actions">
+                        <button id="reportBtn" class="btn btn-danger">Report Stall</button>
+                    </div>
+                ` : '<p>Please login to report this stall.</p>'}
+            </div>
+        `;
+
+        const reactionForm = document.getElementById("reactionForm");
+        const selectedEmojiInput = document.getElementById("selectedEmoji");
+        const reactionButtons = document.querySelectorAll(".reaction-btn");
+        const reactionAnimationContainer = document.getElementById("reaction-animation-container");
+
+        reactionButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                const emojiType = button.dataset.reactionType;
+                selectedEmojiInput.value = emojiType;
+
+                reactionAnimationContainer.innerHTML = `<span style="animation: fadeOut 1s forwards;">${getEmojiIcon(emojiType)}</span>`;
+
+                const countSpan = button.querySelector(".reaction-count");
+                countSpan.textContent = parseInt(countSpan.textContent) + 1;
+            });
+        });
+
+        if (reactionForm) {
+            reactionForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                if (!token) {
+                    alert("You need to be logged in to submit feedback.");
+                    return;
+                }
+
+                const formData = new FormData(reactionForm);
+                const data = Object.fromEntries(formData.entries());
+                data.firstTime = data.firstTime === "true";
+
+                try {
+                    const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (!res.ok) throw new Error("Failed to submit reaction.");
+                    alert("Feedback submitted successfully!");
+                    getStallDetails();
+                } catch (err) {
+                    alert(err.message);
+                }
+            });
+        }
+
+        function getEmojiIcon(type) {
+            switch (type) {
+                case 'love': return '❤️';
+                case 'fire': return '🔥';
+                case 'meh': return '😐';
+                case 'thumbsUp': return '👍';
+                default: return '';
+            }
+        }
+
+        const reportBtn = document.getElementById("reportBtn");
+
+        if (reportBtn && token) {
+            reportBtn.addEventListener("click", async () => {
+                const reason = prompt("Please enter reason for reporting this stall:");
+                if (!reason) return alert("Report reason is required");
+
+                try {
+                    const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/report`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ reason }),
+                    });
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        throw new Error(errorData.message || "Failed to submit report");
+                    }
+                    const data = await res.json();
+
+                    alert("Report submitted. Thank you!");
+                    if (data.message === "Report submitted") {
+                        reportBtn.disabled = true;
+                        reportBtn.textContent = "You already reported this stall";
+                    }
+                    document.getElementById('currentReportCount').textContent = data.currentReportCount;
+                } catch (err) {
+                    alert(err.message);
+                }
+            });
+        }
+
+    } catch (err) {
+        console.error("Error fetching stall details:", err);
+        stallContainer.innerHTML = `<p>Error: ${err.message}</p>`;
     }
-
-    document.getElementById("reactionForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!selectedEmoji) {
-        alert("Please select an emoji reaction.");
-        return;
-      }
-      const formData = new FormData(e.target);
-      const text = formData.get("text");
-      const firstTime = formData.get("firstTime") === "true";
-      const userLocation = formData.get("userLocation");
-
-      const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, { // Use BASE_API_URL
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emoji: selectedEmoji, text, firstTime, userLocation }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert("Feedback submitted");
-        location.reload();
-      } else {
-        alert(data.error || "Failed to submit feedback");
-      }
-    });
-  } catch (err) {
-    stallContainer.innerHTML = `<p>Error loading stall details: ${err.message}</p>`;
-  }
-};
-
-let selectedEmoji = null;
-function setSelectedEmoji(name) {
-  selectedEmoji = name;
-  alert(`Selected emoji: ${name}`);
 }
-
-function renderReviews(reviews) {
-  if (!reviews || reviews.length === 0) return "<p>No reviews yet.</p>";
-  return reviews
-    .map(
-      (r) => `
-    <div style="border:1px solid #ccc; padding:8px; margin-bottom:6px; border-radius:8px;">
-      <p><strong>${emojiToText(r.emoji)}</strong> (${
-        r.firstTime ? "First time" : "Repeat"
-      }) from ${r.userLocation}</p>
-      <p>${r.text}</p>
-    </div>
-  `
-    )
-    .join("");
-}
-
-function emojiToText(emoji) {
-  switch (emoji) {
-    case "love":
-      return "❤️ Love";
-    case "fire":
-    return "🔥 Spicy";
-    case "meh":
-      return "😐 Okay";
-    case "thumbsUp":
-      return "👍 Tasty";
-    default:
-      return "❓ Unknown";
-  }
-}
-
-getStallDetails();
