@@ -1,11 +1,14 @@
 {
   "rewrites": [
-    { "source": "/login", "destination": "/public/login.html" },
-    { "source": "/signup", "destination": "/public/signup.html" },
-    { "source": "/stalls", "destination": "/public/stalls.html" },
-    { "source": "/add-stall", "destination": "/public/add-stall.html" },
-    { "source": "/stall-details", "destination": "/public/stall-details.html" },
-    { "source": "/stall-details/:id", "destination": "/public/stall-details.html" },
-    { "source": "/(.*)", "destination": "/public/index.html" } // FALLBACK for any other path
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/stalls", "destination": "/stalls.html" },
+    { "source": "/add-stall", "destination": "/add-stall.html" },
+    { "source": "/stall-details", "destination": "/stall-details.html" },
+    { "source": "/stall-details/:id", "destination": "/stall-details.html" },
+    { "source": "/css/(.*)", "destination": "/css/$1" },
+    { "source": "/js/(.*)", "destination": "/js/$1" },
+    { "source": "/images/(.*)", "destination": "/images/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
