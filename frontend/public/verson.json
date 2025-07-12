@@ -1,9 +1,11 @@
 {
   "rewrites": [
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/add-stall", "destination": "/add-stall.html" },
-    { "source": "/stalls", "destination": "/stalls.html" },
-    { "source": "/stall-details", "destination": "/stall-details.html" }
+    { "source": "/login", "destination": "/public/login.html" },
+    { "source": "/signup", "destination": "/public/signup.html" },
+    { "source": "/stalls", "destination": "/public/stalls.html" },
+    { "source": "/add-stall", "destination": "/public/add-stall.html" },
+    { "source": "/stall-details", "destination": "/public/stall-details.html" },
+    { "source": "/stall-details/:id", "destination": "/public/stall-details.html" },
+    { "source": "/(.*)", "destination": "/public/index.html" } // FALLBACK for any other path
   ]
 }
