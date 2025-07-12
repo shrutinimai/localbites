@@ -1,50 +1,50 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const stallList = document.getElementById("stall-list");
+const BASE_API_URL = "https://localbites-2.onrender.com"; // Your deployed backend URL
+const token = localStorage.getItem("token");
 
-  const BASE_API_URL = "https://localbites-2.onrender.com";
-
-  function getUserIdFromToken(token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId;
-    } catch {
-      return null;
-    }
+async function fetchUser() {
+  if (!token) {
+    document.getElementById("user-section").innerHTML = `
+      <div class="auth-links">
+        <a href="/login"><button>Login</button></a>
+        <a href="/signup"><button>Sign Up</button></a>
+      </div>
+    `;
+    return;
   }
-
-  const token = localStorage.getItem("token");
-  const currentUserId = token ? getUserIdFromToken(token) : null;
 
   try {
-    const res = await fetch(`${BASE_API_URL}/api/stalls`);
-    if (!res.ok) throw new Error("Failed to fetch stalls");
-    const stalls = await res.json();
-
-    if (!stalls.length) {
-      stallList.innerHTML = "<p>No stalls found. Be the first to add one!</p>";
-      return;
-    }
-
-    stalls.forEach((stall) => {
-      const card = document.createElement("div");
-      card.className = "stall-card";
-
-      const isMyStall = stall.postedBy && currentUserId && (stall.postedBy.toString() === currentUserId);
-
-      card.classList.toggle("my-stall", isMyStall);
-
-      card.innerHTML = `
-        <img src="${stall.imageUrl}" alt="${stall.name}" width="200" />
-        <h3>${stall.name} ${isMyStall ? '<span style="color:green;">(Your Stall)</span>' : ''}</h3>
-        <p>${stall.description}</p>
-        <p><strong>City:</strong> ${stall.city}</p>
-        <p><strong>Category:</strong> ${stall.foodCategory}</p>
-        <a href="/stall-details?id=${stall._id}">View Details</a>
-      `;
-      stallList.appendChild(card);
+    const res = await fetch(`${BASE_API_URL}/api/users/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
+
+    const user = await res.json();
+
+    if (res.ok) {
+      const isOwner = user.role === "owner";
+      document.getElementById("user-section").innerHTML = `
+        <h2>Welcome, ${user.name} (${user.role})!</h2>
+        <p>You can explore or post about hidden food gems.</p>
+        ${isOwner ? '<a href="/add-stall"><button>Add Stall</button></a>' : ''}
+        <button onclick="logout()">Logout</button>
+      `;
+    } else {
+      throw new Error("Invalid token");
+    }
   } catch (err) {
-    console.error("Error fetching stalls:", err);
-    stallList.innerHTML = "<p>Failed to load stalls. Please try again later.</p>";
+    localStorage.removeItem("token");
+    document.getElementById("user-section").innerHTML = `
+      <p>Session expired. Please <a href="/login">login</a> again.</p>
+    `;
   }
-});
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  alert("Logged out");
+  window.location.reload();
+}
+
+// Initial fetch when home.js loads
+fetchUser();
