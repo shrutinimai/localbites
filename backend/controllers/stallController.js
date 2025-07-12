@@ -2,10 +2,6 @@ const Stall = require("../models/stall");
 const Report = require("../models/report");
 const mongoose = require("mongoose");
 
-// We no longer need to import or configure Cloudinary directly here,
-// as the upload.js middleware handles the Cloudinary upload via multer-storage-cloudinary.
-// const cloudinary = require('cloudinary').v2;
-// cloudinary.config({ ... }); // REMOVED
 
 function isValidObjectId(id) {
     return mongoose.Types.ObjectId.isValid(id);
@@ -14,24 +10,21 @@ function isValidObjectId(id) {
 exports.addStall = async (req, res) => {
     console.log("--- addStall controller started ---");
     console.log("Incoming Request - Method:", req.method, "URL:", req.url);
-    // console.log("Headers:", req.headers); // This can be very long, uncomment if absolutely needed
+    // console.log("Headers:", req.headers); 
 
-    // --- CRITICAL NEW LOGS TO DEBUG req.file, req.body, req.user ---
     console.log("Raw req.file (BEFORE try block):", req.file);
     console.log("Raw req.body (BEFORE try block):", req.body);
     console.log("Raw req.user (BEFORE try block):", req.user);
-    // --- END CRITICAL NEW LOGS ---
 
     try {
         console.log("Entered try block in addStall.");
 
-        // Check if multer successfully processed an image file
+        // Checking if multer successfully processed an image file
         if (!req.file) {
             console.error("Error: req.file is undefined inside try block. No image was uploaded or Multer failed.");
             return res.status(400).json({ error: "Image file is required for adding a stall." });
         }
 
-        // Validate that secure_url exists from multer-storage-cloudinary
         if (!req.file.secure_url) {
             console.error("Error: req.file.secure_url is missing from Multer response! Full req.file object:", req.file);
             return res.status(500).json({ error: "Image upload failed internally. Could not get Cloudinary URL." });
@@ -40,7 +33,6 @@ exports.addStall = async (req, res) => {
         const uploadedImageUrl = req.file.secure_url; // Correctly get URL from multer-storage-cloudinary
         console.log("Image URL received from Multer-Cloudinary (inside try):", uploadedImageUrl);
 
-        // Destructure req.body (assuming it's correctly parsed by Express middleware like express.json() and express.urlencoded())
         const {
             name,
             ownerName,
@@ -59,7 +51,6 @@ exports.addStall = async (req, res) => {
             foodInfo,
         } = req.body;
 
-        // Ensure req.user is properly populated by the auth middleware
         if (!req.user || !req.user.userId || !req.user.role) {
             console.error("Error: req.user or its properties (userId, role) are missing after auth middleware.");
             // This case should ideally be caught by the auth middleware itself returning 401 earlier,
@@ -100,28 +91,22 @@ exports.addStall = async (req, res) => {
         res.status(201).json({ message: "Stall added successfully", stall: newStall });
 
     } catch (err) {
-        // --- ENHANCED ERROR LOGGING IN CATCH BLOCK ---
         console.error("!!! Critical Error in addStall controller - CAUGHT EXCEPTION !!!");
         console.error("Error Name:", err.name);
         console.error("Error Message:", err.message);
-        console.error("Error Stack:", err.stack); // Crucial for pinpointing the exact line where the error occurred
+        console.error("Error Stack:", err.stack); 
 
-        // Provide more specific error responses based on error type
         if (err.name === 'ValidationError') {
-            // Mongoose validation error (e.g., required field missing, type mismatch against schema)
             return res.status(400).json({ error: "Validation failed for stall data: " + err.message, details: err.errors });
         }
         if (err.code === 11000) {
-            // Duplicate key error (e.g., if a unique index is violated, like a stall name already existing)
             return res.status(409).json({ error: "Duplicate entry. A stall with similar details might already exist." });
         }
-        // Generic 500 for any other unexpected errors
         res.status(500).json({ error: "Internal Server Error", details: err.message || "An unexpected error occurred." });
     }
     console.log("--- addStall controller finished ---");
 };
 
-// --- REST OF THE CONTROLLER FUNCTIONS (NO CHANGES HERE) ---
 
 exports.getAllStalls = async (req, res) => {
     try {
