@@ -1,14 +1,13 @@
 const Stall = require("../models/stall");
 const Report = require("../models/report");
 const mongoose = require("mongoose");
-const cloudinary = require('cloudinary').v2; // ADDED: Cloudinary import
+// const cloudinary = require('cloudinary').v2;
 
-// ADDED: Cloudinary Configuration (Ensure these env vars are set on Render.com)
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// cloudinary.config({
+//     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//     api_key: process.env.CLOUDINARY_API_KEY,
+//     api_secret: process.env.CLOUDINARY_API_SECRET
+// });
 
 
 function isValidObjectId(id) {
@@ -18,30 +17,22 @@ function isValidObjectId(id) {
 exports.addStall = async (req, res) => {
     console.log("--- addStall controller started ---"); // ADDED: Logging
     console.log("Request body:", req.body); // ADDED: Logging
-    console.log("Request file (from Multer):", req.file); // ADDED: Logging
+    console.log("Request file (from Multer-Cloudinary):", req.file); // ADDED: Logging
 
     try {
-        // ADDED: Check for image file from Multer
+        // Check for image file from Multer (now contains Cloudinary info directly)
         if (!req.file) {
             console.error("Error: No image file provided in the request (req.file is undefined)."); // ADDED: Logging
             return res.status(400).json({ error: "Image file is required." });
         }
 
-        // ADDED: Cloudinary Upload Logic
-        let uploadedImageUrl = "";
-        try {
-            const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: "localbites_stalls", // Optional: A folder in your Cloudinary account
-                use_filename: true, // Use original filename
-                unique_filename: false // Don't append random chars (be careful with duplicates)
-            });
-            uploadedImageUrl = result.secure_url;
-            console.log("Cloudinary upload successful. URL:", uploadedImageUrl); // ADDED: Logging
-        } catch (uploadError) {
-            console.error("Error uploading image to Cloudinary:", uploadError); // ADDED: Logging
-            // If Cloudinary upload fails, send a specific error and don't proceed
-            return res.status(500).json({ error: "Failed to upload image. " + uploadError.message });
-        }
+        // --- PREVIOUS MANUAL CLOUDINARY UPLOAD BLOCK REMOVED ---
+        // As multer-storage-cloudinary handles the upload, req.file.secure_url will be available directly.
+        // The previous code attempting to re-upload using req.file.path was the issue.
+
+        // NEW: Directly get the secure_url from req.file as handled by multer-storage-cloudinary
+        const uploadedImageUrl = req.file.secure_url; // This property is set by CloudinaryStorage
+        console.log("Image URL received from Multer-Cloudinary:", uploadedImageUrl); // ADDED: Logging
 
         // Destructure req.body AFTER checking file upload
         const {
@@ -62,15 +53,15 @@ exports.addStall = async (req, res) => {
             foodInfo,
         } = req.body;
 
-        // ADDED: Log req.user to ensure it's populated by auth middleware
+        // Log req.user to ensure it's populated by auth middleware
         console.log("req.user in addStall:", req.user);
         console.log("req.user.userId:", req.user?.userId);
         console.log("req.user.role:", req.user?.role);
 
-        // Ensure req.user is properly populated (e.g., if auth middleware failed to set it)
+        // Ensure req.user is properly populated by the auth middleware
         if (!req.user || !req.user.userId || !req.user.role) {
             console.error("Error: req.user or its properties (userId, role) are missing after auth middleware.");
-            return res.status(401).json({ error: "User authentication data is missing. Please ensure you are logged in." });
+            return res.status(401).json({ error: "User authentication data is missing. Please ensure you are logged in and your token is valid." });
         }
 
 
@@ -82,7 +73,7 @@ exports.addStall = async (req, res) => {
             foodCategory,
             description,
             foodItem,
-            acceptsGpay: acceptsGpay === "on" || acceptsGpay === true,
+            acceptsGpay: acceptsGpay === "on" || acceptsGpay === true, // Correctly handle checkbox value
             // Convert ratings to numbers if they come as strings from form data
             hygieneRating: hygieneRating ? parseInt(hygieneRating) : undefined,
             tasteRating: tasteRating ? parseInt(tasteRating) : undefined,
@@ -91,18 +82,23 @@ exports.addStall = async (req, res) => {
             closingTime,
             rushHours,
             foodInfo,
-            imageUrl: uploadedImageUrl, // CHANGED: Use the URL from Cloudinary upload
+            imageUrl: uploadedImageUrl, // CORRECTED: Use the URL provided by multer-storage-cloudinary
             postedBy: req.user.userId,
             postedRole: req.user.role,
         });
 
-        console.log("New stall object before saving:", newStall); // ADDED: Logging
+        console.log("New stall object before saving to DB:", newStall); // ADDED: Logging
         await newStall.save();
         console.log("Stall saved successfully with ID:", newStall._id); // ADDED: Logging
 
         res.status(201).json({ message: "Stall added successfully", stall: newStall });
+
     } catch (err) {
-        console.error("!!! Critical Error in addStall controller:", err); // ADDED: Enhanced Logging for all errors
+        console.error("!!! Critical Error in addStall controller:"); // ADDED: Enhanced Logging for all errors
+        console.error("Error Name:", err.name);
+        console.error("Error Message:", err.message);
+        console.error("Error Stack:", err.stack); // This is key for pinpointing the line
+
         // Provide more specific error responses for known Mongoose errors
         if (err.name === 'ValidationError') {
             // Mongoose validation error (e.g., required field missing, type mismatch)
