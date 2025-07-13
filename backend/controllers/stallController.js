@@ -1,3 +1,5 @@
+// backend/controllers/stallController.js
+
 const Stall = require("../models/stall");
 const Report = require("../models/report");
 const mongoose = require("mongoose");
@@ -10,7 +12,6 @@ function isValidObjectId(id) {
 exports.addStall = async (req, res) => {
     console.log("--- addStall controller started ---");
     console.log("Incoming Request - Method:", req.method, "URL:", req.url);
-    // console.log("Headers:", req.headers); 
 
     console.log("Raw req.file (BEFORE try block):", req.file);
     console.log("Raw req.body (BEFORE try block):", req.body);
@@ -19,18 +20,17 @@ exports.addStall = async (req, res) => {
     try {
         console.log("Entered try block in addStall.");
 
-        // Checking if multer successfully processed an image file
         if (!req.file) {
             console.error("Error: req.file is undefined inside try block. No image was uploaded or Multer failed.");
             return res.status(400).json({ error: "Image file is required for adding a stall." });
         }
 
-        if (!req.file.secure_url) {
-            console.error("Error: req.file.secure_url is missing from Multer response! Full req.file object:", req.file);
+        if (!req.file.path) {
+            console.error("Error: req.file.path is missing from Multer response! Full req.file object:", req.file);
             return res.status(500).json({ error: "Image upload failed internally. Could not get Cloudinary URL." });
         }
 
-        const uploadedImageUrl = req.file.secure_url; // Correctly get URL from multer-storage-cloudinary
+        const uploadedImageUrl = req.file.path;
         console.log("Image URL received from Multer-Cloudinary (inside try):", uploadedImageUrl);
 
         const {
@@ -41,7 +41,7 @@ exports.addStall = async (req, res) => {
             foodCategory,
             description,
             foodItem,
-            acceptsGpay, // This will be 'on' or undefined from form-data
+            acceptsGpay,
             hygieneRating,
             tasteRating,
             priceRange,
@@ -53,11 +53,8 @@ exports.addStall = async (req, res) => {
 
         if (!req.user || !req.user.userId || !req.user.role) {
             console.error("Error: req.user or its properties (userId, role) are missing after auth middleware.");
-            // This case should ideally be caught by the auth middleware itself returning 401 earlier,
-            // but it's a good defensive check within the controller.
             return res.status(401).json({ error: "User authentication data is missing. Please ensure you are logged in and your token is valid." });
         }
-
         console.log("req.user.userId (inside try):", req.user.userId);
         console.log("req.user.role (inside try):", req.user.role);
 
@@ -70,8 +67,7 @@ exports.addStall = async (req, res) => {
             foodCategory,
             description,
             foodItem,
-            acceptsGpay: acceptsGpay === "on" || acceptsGpay === true, // Convert "on" to true for boolean fields
-            // Convert ratings to numbers, as they might come as strings from form data
+            acceptsGpay: acceptsGpay === "on" || acceptsGpay === true,
             hygieneRating: hygieneRating ? parseInt(hygieneRating) : undefined,
             tasteRating: tasteRating ? parseInt(tasteRating) : undefined,
             priceRange,
@@ -79,7 +75,7 @@ exports.addStall = async (req, res) => {
             closingTime,
             rushHours,
             foodInfo,
-            imageUrl: uploadedImageUrl, // Use the Cloudinary URL received from Multer
+            imageUrl: uploadedImageUrl,
             postedBy: req.user.userId,
             postedRole: req.user.role,
         });
@@ -94,7 +90,7 @@ exports.addStall = async (req, res) => {
         console.error("!!! Critical Error in addStall controller - CAUGHT EXCEPTION !!!");
         console.error("Error Name:", err.name);
         console.error("Error Message:", err.message);
-        console.error("Error Stack:", err.stack); 
+        console.error("Error Stack:", err.stack);
 
         if (err.name === 'ValidationError') {
             return res.status(400).json({ error: "Validation failed for stall data: " + err.message, details: err.errors });
@@ -106,7 +102,6 @@ exports.addStall = async (req, res) => {
     }
     console.log("--- addStall controller finished ---");
 };
-
 
 exports.getAllStalls = async (req, res) => {
     try {
@@ -161,12 +156,11 @@ exports.getStallById = async (req, res) => {
     try {
         const stall = await Stall.findById(req.params.id)
             .populate("postedBy", "name role")
-            .lean(); // .lean() converts Mongoose document to plain JS object for easier manipulation
+            .lean();
 
         if (!stall) return res.status(404).json({ message: "Stall not found" });
 
         const reportCount = await Report.countDocuments({ stall: req.params.id });
-        // Use an object spread to add reportCount without modifying original Mongoose document
         res.status(200).json({ ...stall, reportCount });
     } catch (err) {
         console.error("Error fetching stall by ID:", err);
@@ -180,7 +174,6 @@ exports.reactToStall = async (req, res) => {
         const stall = await Stall.findById(req.params.id);
         if (!stall) return res.status(404).json({ message: "Stall not found" });
 
-        // Safely increment emoji reactions
         if (!stall.emojiReactions) {
             stall.emojiReactions = {};
         }
@@ -192,7 +185,7 @@ exports.reactToStall = async (req, res) => {
         if (!stall.reviews) {
             stall.reviews = [];
         }
-        stall.reviews.push({ emoji, text, firstTime, userLocation, createdAt: new Date() }); // Add createdAt for reviews
+        stall.reviews.push({ emoji, text, firstTime, userLocation, createdAt: new Date() });
         await stall.save();
 
         res.status(200).json({ message: "Reaction submitted", stall });
@@ -205,7 +198,7 @@ exports.reactToStall = async (req, res) => {
 exports.reportStall = async (req, res) => {
     try {
         const stallId = req.params.id;
-        const userId = req.user.userId; // Assuming req.user is populated by auth middleware
+        const userId = req.user.userId;
         const { reason } = req.body;
 
         if (!isValidObjectId(stallId)) {
@@ -220,7 +213,6 @@ exports.reportStall = async (req, res) => {
             return res.status(404).json({ message: "Stall not found" });
         }
 
-        // Prevent duplicate reports from the same user for the same stall
         const alreadyReported = await Report.findOne({ stall: stallId, reportedBy: userId });
         if (alreadyReported) {
             return res.status(400).json({ message: "You have already reported this stall." });
@@ -235,10 +227,9 @@ exports.reportStall = async (req, res) => {
 
         const currentReportCount = await Report.countDocuments({ stall: stallId });
 
-        const REPORT_THRESHOLD = 5; // Define a threshold for admin alert
+        const REPORT_THRESHOLD = 5;
         if (currentReportCount >= REPORT_THRESHOLD) {
             console.log(`ALERT: Stall "${stall.name}" (ID: ${stall._id}) has reached ${currentReportCount} reports! Admin review advised.`);
-            // In a real app, you might send an email to an admin here.
         }
 
         res.status(200).json({
