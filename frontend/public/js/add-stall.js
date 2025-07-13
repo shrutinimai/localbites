@@ -1,6 +1,6 @@
 const form = document.getElementById("addStallForm");
 
-const BASE_API_URL = "https://localbites-2.onrender.com";
+const BASE_API_URL = "https://localbites-2.onrender.com"; 
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -10,7 +10,7 @@ form.addEventListener("submit", async (e) => {
     if (!currentFormElement) {
         console.error("Error: Form element with ID 'addStallForm' not found!");
         alert("Internal Error: Form not found.");
-        return; 
+        return;
     }
     console.log("Form element found:", currentFormElement);
 
@@ -19,16 +19,16 @@ form.addEventListener("submit", async (e) => {
 
     if (!token) {
         alert("You must be logged in to add a stall.");
-        window.location.href = "/login.html"; // Redirect to login if no token
-        return; // Stop execution if no token
+        window.location.href = "/login.html";
+        return;
     }
+    // --- End Frontend Debugging Logs ---
 
     const formData = new FormData(form);
 
     try {
         console.log("Attempting fetch request to:", `${BASE_API_URL}/api/stalls/add`);
         console.log("Fetch headers:", { Authorization: `Bearer ${token}` });
-        // Note: formData cannot be directly console.logged effectively, but its presence is checked.
 
         const res = await fetch(`${BASE_API_URL}/api/stalls/add`, {
             method: "POST",
@@ -38,28 +38,29 @@ form.addEventListener("submit", async (e) => {
             body: formData
         });
 
-        // --- Frontend Response Handling ---
-        console.log("Backend response received. Status:", res.status, res.statusText);
+        console.log("Backend response received. Status:", res.status, res.statusText); 
 
-        // Check if response is OK (2xx status)
-        if (res.ok) {
-            const result = await res.json(); // Attempt to parse JSON if status is OK
-            console.log("Successful response JSON:", result);
-            alert("Stall added successfully!");
-            window.location.href = "/stalls"; // Redirect on success
-        } else {
-            // Handle non-OK responses (e.g., 4xx or 5xx)
-            let errorMessage = "Something went wrong.";
-            let backendDetails = {};
+        const responseText = await res.text(); 
+        console.log("Raw backend response text:", responseText);
+
+        if (res.ok) { 
             try {
-                // Try to parse JSON even on error, as backend *should* send JSON
-                backendDetails = await res.json();
+                const result = JSON.parse(responseText);
+                console.log("Successful response JSON:", result);
+                alert("Stall added successfully!");
+                window.location.href = "/stalls";
+            } catch (parseError) {
+                console.error("Failed to parse successful response as JSON:", parseError);
+                alert("Stall added, but response was unexpected. Check console for details.");
+            }
+        } else {
+            let errorMessage = "Something went wrong.";
+            try {
+                const backendDetails = JSON.parse(responseText);
                 errorMessage = backendDetails.error || errorMessage;
-                console.error("Error response JSON from backend:", backendDetails);
-            } catch (jsonError) {
-                // If backend didn't send JSON (e.g., HTML error page for 500)
-                console.error("Backend did NOT return valid JSON on error. Cannot parse response.", jsonError);
-                console.error("Full text response from backend:", await res.text()); // Get raw text
+                console.error("Parsed error response JSON from backend:", backendDetails);
+            } catch (jsonParseError) {
+                console.error("Backend did NOT return valid JSON on error. Cannot parse response.", jsonParseError);
                 errorMessage = `Server Error (${res.status}): Backend response was not JSON. Check backend logs for full error.`;
             }
             alert(`Failed to add stall: ${errorMessage}`);
