@@ -11,7 +11,7 @@ router.post(
     stallController.addStall
 );
 
-router.get("/", stallController.getStallsPaginated);
+router.get("/", stallController.getStallsPaginated); 
 
 router.get("/:id", stallController.getStallById);
 
