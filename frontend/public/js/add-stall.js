@@ -1,6 +1,29 @@
 const form = document.getElementById("addStallForm");
+const getCoordsBtn = document.getElementById("getCoordsBtn"); 
+const latitudeInput = document.getElementById("latitude");     
+const longitudeInput = document.getElementById("longitude");   
 
 const BASE_API_URL = "https://localbites-2.onrender.com"; 
+
+getCoordsBtn.addEventListener("click", () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                latitudeInput.value = position.coords.latitude.toFixed(6);
+                longitudeInput.value = position.coords.longitude.toFixed(6);
+                alert("Location retrieved successfully!");
+            },
+            (error) => {
+                console.error("Error getting location:", error);
+                alert("Failed to get your location. Please enter it manually or check browser permissions.");
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    } else {
+        alert("Geolocation is not supported by your browser. Please enter coordinates manually.");
+    }
+});
+
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -22,7 +45,6 @@ form.addEventListener("submit", async (e) => {
         window.location.href = "/login.html";
         return;
     }
-    // --- End Frontend Debugging Logs ---
 
     const formData = new FormData(form);
 
