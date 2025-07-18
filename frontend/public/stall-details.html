@@ -1,45 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stall Details</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stall Details</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-stalls">
-    <div class="main-container stall-details-container">
-        <div id="stallContainer">
-            <p>Loading stall details...</p>
+    <div class="main-container stall-details-container">
+        <div id="stallContainer">
+            <p>Loading stall details...</p>
+        </div>
+        <div id="distance-info-section">
+            </div>
+
+        <div id="reviews-ratings-section">
+            <h3>Ratings & Reviews</h3>
+            <p><strong>Overall Taste Rating:</strong> <span id="overall-taste-rating">N/A</span> / 5</p>
+            <p><strong>Hygiene Rating:</strong> <span id="hygiene-rating">N/A</span> / 5</p>
+
+            <h4>User Reviews:</h4>
+            <ul id="reviews-list">
+                </ul>
+
+            <h4>Leave a Review</h4>
+            <form id="review-form">
+                <div class="form-group">
+                    <label for="review-rating">Rating (1-5):</label>
+                    <input type="number" id="review-rating" name="rating" min="1" max="5" required />
+                </div>
+                <div class="form-group">
+                    <label for="review-text">Your Review:</label>
+                    <textarea id="review-text" name="text" rows="4" placeholder="Share your experience..." required></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="first-time" name="firstTime" />
+                    <label for="first-time">First time visiting?</label>
+                </div>
+                <button type="submit" class="btn">Submit Review</button>
+            </form>
         </div>
-    </div>
-<!-- GPS and Distance -->
-<div>
-  <p><strong>Your Distance:</strong> <span id="distance">Calculating...</span></p>
-  <a id="map-link" href="#" target="_blank">View on Map</a>
-</div>
-<!-- Reviews and Ratings Section -->
-<div id="ratings-section">
-  <h3>Ratings & Reviews</h3>
-  <p>Average Rating: <span id="average-rating">0</span> / 5</p>
+    </div>
 
-  <!-- Existing Reviews -->
-  <ul id="reviews-list"></ul>
-
-  <!-- Add New Review -->
-  <h4>Leave a Review</h4>
-  <form id="review-form">
-    <label for="rating">Rating (1–5):</label>
-    <input type="number" id="rating" min="1" max="5" required />
-    <br />
-    <label for="review">Review:</label>
-    <textarea id="review" required></textarea>
-    <br />
-    <button type="submit">Submit Review</button>
-  </form>
-</div>
-
-    <script src="/js/stall-details.js"></script>
+    <script src="/js/stall-details.js"></script>
 </body>
 </html>
