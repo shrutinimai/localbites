@@ -19,7 +19,20 @@ const stallSchema = new mongoose.Schema({
     foodInfo: { type: String, trim: true },
     imageUrl: { type: String, trim: true },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    postedRole: { type: String, enum: ['foodie', 'owner', 'admin'], default: 'foodie' }, // Ensure 'admin' is a possible role if you have it
+    postedRole: { type: String, enum: ['foodie', 'owner', 'admin'], default: 'foodie' },
+     // Ensure 'admin' is a possible role if you have it
+     location: {
+    type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+    },
+    coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: '2dsphere'
+    }
+},
+
     status: {
         type: String,
         enum: ['active', 'inactive', 'deleted'], 
