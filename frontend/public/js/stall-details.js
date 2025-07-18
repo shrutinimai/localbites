@@ -1,8 +1,34 @@
 const stallContainer = document.getElementById("stallContainer");
+const reviewsRatingsSection = document.getElementById("reviews-ratings-section"); 
+const overallTasteRatingSpan = document.getElementById("overall-taste-rating"); 
+const hygieneRatingSpan = document.getElementById("hygiene-rating");        
+const reviewsList = document.getElementById("reviews-list");             
+const reviewForm = document.getElementById("review-form");               
+const reviewRatingInput = document.getElementById("review-rating");      
+const reviewTextInput = document.getElementById("review-text");          
+const firstTimeCheckbox = document.getElementById("first-time");         
+const distanceInfoSection = document.getElementById("distance-info-section"); 
+
 const urlParams = new URLSearchParams(window.location.search);
 const stallId = urlParams.get("id");
 const token = localStorage.getItem("token");
 const BASE_API_URL = "https://localbites-2.onrender.com";
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of Earth in kilometers
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return (R * c).toFixed(2);
+}
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+
 
 if (!stallId) {
     stallContainer.innerHTML = "<p>Stall ID is missing.</p>";
@@ -19,100 +45,144 @@ async function getStallDetails() {
         if (!res.ok) throw new Error("Failed to fetch stall details.");
         const stall = await res.json();
 
-        let averageRating = 0;
-        if (stall.reviews?.length > 0) {
-            const total = stall.reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
-            averageRating = (total / stall.reviews.length).toFixed(1);
-        }
-
-        let distanceHTML = '';
-        let mapLinkHTML = '';
-        const [lng, lat] = stall.location?.coordinates || [];
-        if (lat && lng && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const userLat = pos.coords.latitude;
-                const userLng = pos.coords.longitude;
-                const dist = haversineDistance(userLat, userLng, lat, lng);
-                document.getElementById("distance").textContent = `${dist} km`;
-            });
-            distanceHTML = `<p><strong>Your Distance:</strong> <span id="distance">Calculating...</span></p>`;
-            mapLinkHTML = `<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">📍 View on Map</a>`;
-        }
-
         stallContainer.innerHTML = `
             <h2>${stall.name}</h2>
-            <img src="${stall.imageUrl}" alt="${stall.name}" class="stall-main-image"/>
-            ${distanceHTML}
-            ${mapLinkHTML}
-            ...
-            <div class="reviews-section">
-                <h3>User Reviews</h3>
-                <p><strong>Average Rating:</strong> <span id="average-rating">${averageRating}</span> / 5</p>
-                ${stall.reviews && stall.reviews.length > 0 ? `
-                    <ul>
-                        ${stall.reviews.map(r => `
-                            <li>
-                                ⭐ ${r.rating || 'N/A'} | ${r.firstTime ? "🆕 First Timer" : "🔁 Repeat"}: 
-                                ${r.text} <em>(${r.userLocation || "Unknown"})</em>
-                            </li>
-                        `).join('')}
-                    </ul>
-                ` : '<p>No reviews yet.</p>'}
-            </div>
+            <img src="${stall.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="${stall.name}" class="stall-main-image"/>
+            <p><strong>Owner:</strong> ${stall.ownerName}</p>
+            <p><strong>Location:</strong> ${stall.city}, ${stall.area}</p>
+            <p><strong>Food Category:</strong> ${stall.foodCategory}</p>
+            <p><strong>Main Food Item:</strong> ${stall.foodItem}</p>
+            ${stall.description ? `<p><strong>Description:</strong> ${stall.description}</p>` : ''}
+            ${stall.foodInfo ? `<p><strong>Food Info:</strong> ${stall.foodInfo}</p>` : ''}
+            <p><strong>Price Range:</strong> ${stall.priceRange || 'N/A'}</p>
+            <p><strong>Opening Time:</strong> ${stall.openingTime || 'N/A'}</p>
+            <p><strong>Closing Time:</strong> ${stall.closingTime || 'N/A'}</p>
+            <p><strong>Rush Hours:</strong> ${stall.rushHours || 'N/A'}</p>
+            <p><strong>Accepts GPay:</strong> ${stall.acceptsGpay ? "Yes" : "No"}</p>
         `;
 
+        hygieneRatingSpan.textContent = stall.hygieneRating ? `${stall.hygieneRating.toFixed(1)}` : 'N/A';
+        overallTasteRatingSpan.textContent = stall.tasteRating ? `${stall.tasteRating.toFixed(1)}` : 'N/A';
 
-        const reviewForm = document.getElementById("review-form");
-        if (reviewForm) {
-            reviewForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                if (!token) return alert("Please login to submit review.");
-
-                const rating = parseInt(document.getElementById("rating").value);
-                const reviewText = document.getElementById("review").value;
-
-                try {
-                    const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({
-                            emoji: "",  // optional
-                            text: reviewText,
-                            rating,
-                            userLocation: "N/A", // optional: add input if needed
-                            firstTime: true       // optional: set default
-                        }),
-                    });
-
-                    if (!res.ok) throw new Error("Failed to submit review");
-                    alert("Review submitted!");
-                    getStallDetails(); // reload to reflect
-                } catch (err) {
-                    alert(err.message);
-                }
+        reviewsList.innerHTML = ''; 
+        if (stall.reviews && stall.reviews.length > 0) {
+            stall.reviews.forEach(review => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <p>
+                        ${review.rating ? `<strong>Rating:</strong> ${review.rating}/5 ` : ''}
+                        ${review.emoji || ''} - ${review.text || 'No text provided'}
+                        <br>
+                        <small>${review.firstTime ? ' (First visit)' : ' (Repeat visit)'} 
+                        ${review.userLocation ? ` from ${review.userLocation}` : ''}
+                        ${review.createdAt ? ` on ${new Date(review.createdAt).toLocaleDateString()}` : ''}</small>
+                    </p>
+                `;
+                reviewsList.appendChild(li);
             });
+        } else {
+            reviewsList.innerHTML = '<li>No reviews yet.</li>';
         }
+
+        const [stallLng, stallLat] = stall.location?.coordinates || [];
+        distanceInfoSection.innerHTML = '<p><strong>Your Distance:</strong> <span id="distance">Calculating...</span></p><p><a id="map-link" href="#" target="_blank"></a></p>';
+        const distanceSpan = document.getElementById("distance");
+        const mapLink = document.getElementById("map-link");
+
+        if (stallLat && stallLng && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const userLat = pos.coords.latitude;
+                    const userLng = pos.coords.longitude;
+                    const dist = haversineDistance(userLat, userLng, stallLat, stallLng);
+                    distanceSpan.textContent = `${dist} km`;
+                    mapLink.textContent = '📍 View on Map';
+                    mapLink.href = `https://www.google.com/maps/dir/${userLat},${userLng}/${stallLat},${stallLng}`;
+                },
+                (error) => {
+                    console.error("Error getting user location for distance:", error);
+                    distanceSpan.textContent = "N/A (Couldn't get your location)";
+                    mapLink.textContent = '📍 View Stall on Map';
+                    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${stallLat},${stallLng}`;
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        } else {
+            distanceSpan.textContent = "N/A (Stall location or Geolocation not available)";
+            if(stallLat && stallLng){
+                 mapLink.textContent = '📍 View Stall on Map';
+                 mapLink.href = `https://www.google.com/maps/search/?api=1&query=${stallLat},${stallLng}`;
+            } else {
+                mapLink.textContent = ''; 
+            }
+        }
+
 
     } catch (err) {
         console.error("Error fetching stall details:", err);
-        stallContainer.innerHTML = `<p>Error: ${err.message}</p>`;
+        stallContainer.innerHTML = `<p>Error loading stall details: ${err.message}</p>`;
+        reviewsRatingsSection.style.display = 'none';
+        distanceInfoSection.style.display = 'none';
     }
 }
 
-function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return (R * c).toFixed(2);
-}
-function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-}
+reviewForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!token) {
+        alert("Please login to submit a review.");
+        return;
+    }
+
+    const rating = parseInt(reviewRatingInput.value);
+    const reviewText = reviewTextInput.value.trim();
+    const firstTime = firstTimeCheckbox.checked;
+
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+        alert("Please provide a valid rating between 1 and 5.");
+        return;
+    }
+    if (!reviewText) {
+        alert("Please write your review.");
+        return;
+    }
+
+    try {
+        let userLocationForReview = "Unknown Location";
+        if (navigator.geolocation) {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000, maximumAge: 60000 });
+            });
+            
+            userLocationForReview = `Lat: ${pos.coords.latitude.toFixed(2)}, Lng: ${pos.coords.longitude.toFixed(2)}`;
+        }
+
+
+        const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/react`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                // emoji: "⭐", // You can add UI for emoji selection later
+                text: reviewText,
+                rating,
+                firstTime,
+                userLocation: userLocationForReview, 
+            }),
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || "Failed to submit review");
+        }
+        alert("Review submitted successfully!");
+        reviewRatingInput.value = '';
+        reviewTextInput.value = '';
+        firstTimeCheckbox.checked = false;
+        getStallDetails();
+    } catch (err) {
+        console.error("Error submitting review:", err);
+        alert(`Error: ${err.message}`);
+    }
+});
