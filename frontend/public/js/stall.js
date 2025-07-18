@@ -13,7 +13,7 @@ const stallsPerPageSelect = document.getElementById("stallsPerPage");
 
 let currentPage = 1;
 
-const BASE_API_URL = "https://localbites-2.onrender.com"; // Your deployed backend URL
+const BASE_API_URL = "https://localbites-2.onrender.com"; 
 const token = localStorage.getItem("token");
 
 if (token) {
@@ -50,7 +50,7 @@ async function fetchStalls() {
     if (category) query += `&foodCategory=${encodeURIComponent(category)}`;
 
     try {
-        const res = await fetch(`${BASE_API_URL}/api/stalls?${query}`); // Corrected API URL
+        const res = await fetch(`${BASE_API_URL}/api/stalls?${query}`); 
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
