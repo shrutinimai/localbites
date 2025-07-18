@@ -1,43 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Add New Stall</title>
-  <link rel="stylesheet" href="/css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add New Stall</title>
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="bg-add-stall">
-  <div class="main-container">
-    <h2>Add a New Stall</h2>
-    <form id="addStallForm" enctype="multipart/form-data">
-      <input type="text" name="name" placeholder="Stall Name" required />
-      <input type="text" name="ownerName" placeholder="Owner's Name" required />
-      <input type="text" name="city" placeholder="City" required />
-      <input type="text" name="area" placeholder="Area" required />
-      <input type="text" name="foodCategory" placeholder="Food Category" required />
-      <input type="text" name="foodItem" placeholder="Main Food Item" required />
-      <textarea name="foodInfo" placeholder="More about the food..." rows="3"></textarea>
-      <textarea name="description" placeholder="Description" rows="3"></textarea>
+  <div class="main-container">
+    <h2>Add a New Stall</h2>
+    <form id="addStallForm" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="Stall Name" required />
+      <input type="text" name="ownerName" placeholder="Owner's Name" required />
+      <input type="text" name="city" placeholder="City" required />
+      <input type="text" name="area" placeholder="Area" required />
+      <input type="text" name="foodCategory" placeholder="Food Category" required />
+      <input type="text" name="foodItem" placeholder="Main Food Item" required />
+      <textarea name="foodInfo" placeholder="More about the food..." rows="3"></textarea>
+      <textarea name="description" placeholder="Description" rows="3"></textarea>
 
-      <input type="number" name="hygieneRating" placeholder="Hygiene Rating (1-5)" min="1" max="5" />
-      <input type="number" name="tasteRating" placeholder="Taste Rating (1-5)" min="1" max="5" />
-      <input type="text" name="priceRange" placeholder="Price Range (e.g., ₹50 - ₹150)" />
-      <input type="text" name="openingTime" placeholder="Opening Time (e.g., 10:00 AM)" />
-      <input type="text" name="closingTime" placeholder="Closing Time (e.g., 9:00 PM)" />
-      <input type="text" name="rushHours" placeholder="Rush Hours (e.g., 12 PM - 2 PM)" />
+      <input type="number" name="hygieneRating" placeholder="Hygiene Rating (1-5)" min="1" max="5" />
+      <input type="number" name="tasteRating" placeholder="Taste Rating (1-5)" min="1" max="5" />
+      <input type="text" name="priceRange" placeholder="Price Range (e.g., ₹50 - ₹150)" />
+      <input type="text" name="openingTime" placeholder="Opening Time (e.g., 10:00 AM)" />
+      <input type="text" name="closingTime" placeholder="Closing Time (e.g., 9:00 PM)" />
+      <input type="text" name="rushHours" placeholder="Rush Hours (e.g., 12 PM - 2 PM)" />
 
-      <label>
-        <input type="checkbox" name="acceptsGpay" />
-        Accepts GPay
-      </label>
+      <label>
+        <input type="checkbox" name="acceptsGpay" />
+        Accepts GPay
+      </label>
 
-      <label for="image">Upload Stall Image:</label>
-      <input type="file" name="image" accept="image/*" required />
+      <div class="form-group">
+          <label for="latitude">Latitude:</label>
+          <input type="text" id="latitude" name="latitude" placeholder="e.g., 11.0168" />
+      </div>
+      <div class="form-group">
+          <label for="longitude">Longitude:</label>
+          <input type="text" id="longitude" name="longitude" placeholder="e.g., 76.9558" />
+      </div>
+      <button type="button" id="getCoordsBtn" class="btn-secondary" style="margin-bottom: 15px;">Get My Current Location</button>
 
-      <button type="submit">Add Stall</button>
-    </form>
-  </div>
+      <label for="image">Upload Stall Image:</label>
+      <input type="file" name="image" accept="image/*" required />
 
-  <script src="/js/add-stall.js"></script>
+      <button type="submit">Add Stall</button>
+    </form>
+  </div>
+
+  <script src="/js/add-stall.js"></script>
 </body>
 </html>
