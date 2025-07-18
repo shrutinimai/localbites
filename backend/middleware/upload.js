@@ -18,7 +18,7 @@ try {
         cloudinary, 
         params: {
             folder: "localbites-stalls", 
-            allowed_formats: ["jpg", "png", "jpeg"], 
+            allowed_formats: ["jpg", "png", "jpeg","webp"], 
 
         },
     });
