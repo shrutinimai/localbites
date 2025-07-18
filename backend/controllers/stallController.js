@@ -58,6 +58,7 @@ exports.addStall = async (req, res) => {
         console.log("req.user.userId (inside try):", req.user.userId);
         console.log("req.user.role (inside try):", req.user.role);
 
+const { latitude, longitude } = req.body;
 
         const newStall = new Stall({
             name,
@@ -78,6 +79,11 @@ exports.addStall = async (req, res) => {
             imageUrl: uploadedImageUrl,
             postedBy: req.user.userId,
             postedRole: req.user.role,
+            location: {
+        type: "Point",
+        coordinates: [longitude, latitude],
+    },
+
         });
 
         console.log("New stall object before saving to DB:", newStall);
@@ -170,30 +176,52 @@ exports.getStallById = async (req, res) => {
 
 exports.reactToStall = async (req, res) => {
     try {
-        const { emoji, text, firstTime, userLocation } = req.body;
+        const { emoji, text, rating, firstTime, userLocation } = req.body;
         const stall = await Stall.findById(req.params.id);
         if (!stall) return res.status(404).json({ message: "Stall not found" });
 
-        if (!stall.emojiReactions) {
-            stall.emojiReactions = {};
+        // Add emoji reaction
+        if (emoji) {
+            if (!stall.emojiReactions) stall.emojiReactions = {};
+            stall.emojiReactions[emoji] = (stall.emojiReactions[emoji] || 0) + 1;
         }
-        stall.emojiReactions[emoji] = (stall.emojiReactions[emoji] || 0) + 1;
 
-        if (firstTime) stall.firstTimeCount++;
-        else stall.repeatCount++;
+        // Track firstTime vs repeat
+        if (firstTime === true) stall.firstTimeCount++;
+        else if (firstTime === false) stall.repeatCount++;
 
-        if (!stall.reviews) {
-            stall.reviews = [];
+        // Push new review
+        const newReview = {
+            emoji,
+            text,
+            rating: rating ? parseInt(rating) : undefined,
+            firstTime,
+            userLocation,
+            createdAt: new Date()
+        };
+        stall.reviews.push(newReview);
+
+        // Optional: Save average tasteRating
+        if (rating && !isNaN(rating)) {
+            const ratings = stall.reviews
+                .map(r => r.rating)
+                .filter(r => typeof r === 'number' && !isNaN(r));
+
+            if (ratings.length > 0) {
+                const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+                stall.tasteRating = Math.round(avg * 10) / 10; // rounded to 1 decimal
+            }
         }
-        stall.reviews.push({ emoji, text, firstTime, userLocation, createdAt: new Date() });
+
         await stall.save();
+        res.status(200).json({ message: "Review submitted", stall });
 
-        res.status(200).json({ message: "Reaction submitted", stall });
     } catch (err) {
-        console.error("Error reacting to stall:", err);
+        console.error("Error in reactToStall:", err);
         res.status(500).json({ error: err.message });
     }
 };
+
 
 exports.reportStall = async (req, res) => {
     try {
@@ -241,3 +269,4 @@ exports.reportStall = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
