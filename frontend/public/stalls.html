@@ -1,59 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stalls List</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stalls List</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-stalls">
-    <div class="main-container">
-        <h1>Stalls List</h1>
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <button id="addStallBtn" class="btn-primary">➕ Add Stall</button>
-            <button id="logoutBtn" class="btn-secondary" style="background-color: #f39c12; border-color: #f39c12;">🚪 Logout</button>
-        </div>
+    <div class="main-container">
+        <h1>Stalls List</h1>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <button id="addStallBtn" class="btn-primary">➕ Add Stall</button>
+            <button id="logoutBtn" class="btn-secondary" style="background-color: #f39c12; border-color: #f39c12;">🚪 Logout</button>
+        </div>
 
-        <div class="filter-section">
-            <input type="text" id="searchName" placeholder="Search by name" />
-            <input type="text" id="searchCity" placeholder="Search by city" />
-            <select id="filterCategory">
-                <option value="">All Categories</option>
-                <option value="Indian">Indian</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Italian">Italian</option>
-                <option value="Mexican">Mexican</option>
-                <option value="Desserts">Desserts</option>
-                <option value="Beverages">Beverages</option>
-                <option value="Fast Food">Fast Food</option>
-                <option value="South Indian">South Indian</option>
-                <option value="North Indian">North Indian</option>
-                <option value="Street Food">Street Food</option>
-                <option value="Bakery">Bakery</option>
-                <option value="Café">Café</option>
-            </select>
-            <select id="stallsPerPage">
-                <option value="5">5 Stalls per page</option>
-                <option value="10">10 Stalls per page</option>
-                <option value="15">15 Stalls per page</option>
-                <option value="20">20 Stalls per page</option>
-            </select>
-            <button id="applyFiltersBtn" class="btn">Apply Filters</button>
-        </div>
+        <div class="filter-section">
+            <input type="text" id="searchName" placeholder="Search by name" />
+            <input type="text" id="searchCity" placeholder="Search by city" />
+            <select id="filterCategory">
+                <option value="">All Categories</option>
+                <option value="Indian">Indian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Italian">Italian</option>
+                <option value="Mexican">Mexican</option>
+                <option value="Desserts">Desserts</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Fast Food">Fast Food</option>
+                <option value="South Indian">South Indian</option>
+                <option value="North Indian">North Indian</option>
+                <option value="Street Food">Street Food</option>
+                <option value="Bakery">Bakery</option>
+                <option value="Café">Café</option>
+            </select>
+            <select id="stallsPerPage">
+                <option value="5">5 Stalls per page</option>
+                <option value="10">10 Stalls per page</option>
+                <option value="15">15 Stalls per page</option>
+                <option value="20">20 Stalls per page</option>
+            </select>
+            <button id="applyFiltersBtn" class="btn">Apply Filters</button>
+        </div>
 
-        <div id="stallsList">
-            <p class="loading-message">Loading stalls...</p>
-        </div>
+                <div id="stallsList">
+            <p class="loading-message">Loading stalls...</p>
+        </div>
 
-        <div class="pagination">
-            <button id="prevPageBtn" disabled>Previous</button>
-            <span id="currentPageSpan">Page 1</span>
-            <button id="nextPageBtn">Next</button>
-        </div>
-    </div>
+        <div class="pagination">
+            <button id="prevPageBtn" disabled>Previous</button>
+            <span id="currentPageSpan">Page 1</span>
+            <button id="nextPageBtn">Next</button>
+        </div>
+    </div>
 
-    <script src="/js/stall.js"></script>
+    <script src="/js/stalls.js"></script>
 </body>
 </html>
