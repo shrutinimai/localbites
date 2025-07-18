@@ -1,9 +1,7 @@
-// backend/controllers/stallController.js
 
 const Stall = require("../models/stall");
 const Report = require("../models/report");
 const mongoose = require("mongoose");
-
 
 function isValidObjectId(id) {
     return mongoose.Types.ObjectId.isValid(id);
@@ -49,6 +47,8 @@ exports.addStall = async (req, res) => {
             closingTime,
             rushHours,
             foodInfo,
+            latitude,
+            longitude,
         } = req.body;
 
         if (!req.user || !req.user.userId || !req.user.role) {
@@ -58,7 +58,7 @@ exports.addStall = async (req, res) => {
         console.log("req.user.userId (inside try):", req.user.userId);
         console.log("req.user.role (inside try):", req.user.role);
 
-const { latitude, longitude } = req.body;
+        
 
         const newStall = new Stall({
             name,
@@ -79,11 +79,10 @@ const { latitude, longitude } = req.body;
             imageUrl: uploadedImageUrl,
             postedBy: req.user.userId,
             postedRole: req.user.role,
-            location: {
-        type: "Point",
-        coordinates: [longitude, latitude],
-    },
-
+            location: (latitude && longitude) ? {
+                type: "Point",
+                coordinates: [parseFloat(longitude), parseFloat(latitude)], // Ensure they are parsed as floats
+            } : undefined, // Make location optional if not provided
         });
 
         console.log("New stall object before saving to DB:", newStall);
@@ -130,26 +129,85 @@ exports.getStallsPaginated = async (req, res) => {
 
         const skip = (page - 1) * limit;
 
-        const filterQuery = { status: "active" };
-        if (req.query.name) {
-            filterQuery.name = { $regex: req.query.name, $options: 'i' };
+        const { name, city, foodCategory, userLat, userLng } = req.query; // ADDITION: Get user location
+        let filterQuery = { status: "active" };
+
+        // Build base match query for filtering
+        let matchQuery = { status: "active" };
+        if (name) {
+            matchQuery.name = { $regex: name, $options: 'i' };
         }
-        if (req.query.city) {
-            filterQuery.city = { $regex: req.query.city, $options: 'i' };
+        if (city) {
+            matchQuery.city = { $regex: city, $options: 'i' };
         }
-        if (req.query.foodCategory) {
-            filterQuery.foodCategory = req.query.foodCategory;
+        if (foodCategory) {
+            matchQuery.foodCategory = foodCategory;
         }
 
-        const total = await Stall.countDocuments(filterQuery);
-        const stalls = await Stall.find(filterQuery)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate("postedBy", "_id name role");
+        let aggregationPipeline = [];
+
+        if (userLat && userLng) {
+            const userLatitude = parseFloat(userLat);
+            const userLongitude = parseFloat(userLng);
+
+            aggregationPipeline.push({
+                $geoNear: {
+                    near: {
+                        type: "Point",
+                        coordinates: [userLongitude, userLatitude]
+                    },
+                    distanceField: "distance",
+                    spherical: true, 
+                    maxDistance: 500000,
+                    query: matchQuery 
+                }
+            });
+            
+        } else {
+            aggregationPipeline.push({ $match: matchQuery });
+        }
+        
+
+        const total = await Stall.countDocuments(matchQuery); 
+
+        aggregationPipeline.push(
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            { $lookup: { 
+                from: 'users',
+                localField: 'postedBy',
+                foreignField: '_id',
+                as: 'postedBy'
+            }},
+            { $unwind: { path: '$postedBy', preserveNullAndEmptyArrays: true } }, 
+            { $project: { 
+                'postedBy.password': 0, 
+                'postedBy.email': 0,    
+                'postedBy.__v': 0,      
+            }}
+        );
+
+        // If user location was provided, sort by distance too
+        // Note: $geoNear automatically sorts by distance, so explicitly adding $sort:{distance:1} after $geoNear is often redundant,
+        // but it clarifies intent and ensures consistent sorting if $geoNear is not the first stage later.
+        if (userLat && userLng) {
+             // $geoNear already sorts by distance. If you need other primary sorts, place them first
+             // and potentially re-sort by distance if necessary for secondary sort.
+             // For simple closest-first, $geoNear's sort is enough.
+        }
+
+        console.log("Aggregation Pipeline:", JSON.stringify(aggregationPipeline, null, 2));
+        const stalls = await Stall.aggregate(aggregationPipeline);
 
         res.json({
-            stalls,
+            stalls: stalls.map(stall => {
+                // ADDITION: Format distance to km if present, from meters
+                if (stall.distance !== undefined) {
+                    stall.distance = (stall.distance / 1000).toFixed(2); // Convert meters to km
+                }
+                return stall;
+            }),
             pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
         });
     } catch (err) {
@@ -157,6 +215,7 @@ exports.getStallsPaginated = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 exports.getStallById = async (req, res) => {
     try {
@@ -180,17 +239,14 @@ exports.reactToStall = async (req, res) => {
         const stall = await Stall.findById(req.params.id);
         if (!stall) return res.status(404).json({ message: "Stall not found" });
 
-        // Add emoji reaction
         if (emoji) {
             if (!stall.emojiReactions) stall.emojiReactions = {};
             stall.emojiReactions[emoji] = (stall.emojiReactions[emoji] || 0) + 1;
         }
 
-        // Track firstTime vs repeat
         if (firstTime === true) stall.firstTimeCount++;
         else if (firstTime === false) stall.repeatCount++;
 
-        // Push new review
         const newReview = {
             emoji,
             text,
@@ -269,4 +325,3 @@ exports.reportStall = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
