@@ -3,7 +3,8 @@
 ## Live Project Links
 ======================
 
-* **Live Frontend Demo:** localbites-pwtcfq1cn-shruti-s-projects-5c62ec96.vercel.app
+
+* **Live Frontend Demo:** https://687b91f44115fb827ea6fffd--localbitez.netlify.app/
 
 * **Live Backend API:** https://localbites-2.onrender.com
 (Note: This is the API base URL, not necessarily a browsable page)
@@ -11,7 +12,7 @@
 ## Demo Video
 ==============
 
-* **Watch the Demo Video:** :https://drive.google.com/file/d/1ix6DpU5ZxShGiYq7SqOQCgM0DAu4naWN/view?usp=drive_link
+* **Watch the Demo Video:** :https://drive.google.com/file/d/1XWTqePfx42JGEb9KcShtjt7s1r29UT5T/view?usp=drive_link
 
 
 ## Project Overview
