@@ -415,12 +415,12 @@ button:disabled, .btn:disabled {
     gap: 8px;
     font-size: 1.05rem; 
 }
-.reactions-buttons .reaction-btn:hover {
+.reaction-btn:hover {
     transform: translateY(-3px) scale(1.02); 
     box-shadow: 0 6px 18px rgba(23, 162, 184, 0.45);
     background: linear-gradient(to right, #20c997, #17a2b8); 
 }
-.reactions-buttons .reaction-btn i {
+.reaction-btn i {
     font-size: 1.3em;
     margin-right: 5px;
     color: #fff; 
@@ -1042,4 +1042,82 @@ button:disabled, .btn:disabled {
     padding: 3px 8px;
     border-radius: 4px;
     vertical-align: middle;
+}
+
+/* ADDED: Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 80%; /* Could be responsive */
+    max-width: 500px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+}
+
+.modal-content textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+.modal-content .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    border-radius: 5px;
 }
