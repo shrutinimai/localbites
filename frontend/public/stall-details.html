@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stall Details</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stall Details</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-stalls">
-    <div class="main-container stall-details-container">
-        <div id="stallContainer">
-            <p>Loading stall details...</p>
-        </div>
+    <div class="main-container stall-details-container">
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button id="reportStallBtn" class="btn-secondary" style="background-color: #e74c3c; border-color: #c0392b;">
+                <i class="fas fa-flag"></i> Report Stall
+            </button>
+        </div>
+
+        <div id="stallContainer">
+            <p>Loading stall details...</p>
+        </div>
         <div id="distance-info-section">
             </div>
 
@@ -42,8 +48,22 @@
                 <button type="submit" class="btn">Submit Review</button>
             </form>
         </div>
-    </div>
+    </div>
 
-    <script src="/js/stall-details.js"></script>
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Report Stall</h2>
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="reportReason">Reason for reporting:</label>
+                    <textarea id="reportReason" name="reason" rows="4" placeholder="Please describe why you are reporting this stall..." required></textarea>
+                </div>
+                <button type="submit" class="btn">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/stall-details.js"></script>
 </body>
 </html>
