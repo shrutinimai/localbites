@@ -1,13 +1,20 @@
 const stallContainer = document.getElementById("stallContainer");
 const reviewsRatingsSection = document.getElementById("reviews-ratings-section"); 
 const overallTasteRatingSpan = document.getElementById("overall-taste-rating"); 
-const hygieneRatingSpan = document.getElementById("hygiene-rating");        
-const reviewsList = document.getElementById("reviews-list");             
-const reviewForm = document.getElementById("review-form");               
+const hygieneRatingSpan = document.getElementById("hygiene-rating");       
+const reviewsList = document.getElementById("reviews-list");           
+const reviewForm = document.getElementById("review-form");             
 const reviewRatingInput = document.getElementById("review-rating");      
-const reviewTextInput = document.getElementById("review-text");          
-const firstTimeCheckbox = document.getElementById("first-time");         
+const reviewTextInput = document.getElementById("review-text");        
+const firstTimeCheckbox = document.getElementById("first-time");       
 const distanceInfoSection = document.getElementById("distance-info-section"); 
+
+const reportStallBtn = document.getElementById("reportStallBtn");
+const reportModal = document.getElementById("reportModal");
+const closeButton = reportModal.querySelector(".close-button");
+const reportForm = document.getElementById("reportForm");
+const reportReasonInput = document.getElementById("reportReason");
+
 
 const urlParams = new URLSearchParams(window.location.search);
 const stallId = urlParams.get("id");
@@ -59,7 +66,7 @@ async function getStallDetails() {
             <p><strong>Closing Time:</strong> ${stall.closingTime || 'N/A'}</p>
             <p><strong>Rush Hours:</strong> ${stall.rushHours || 'N/A'}</p>
             <p><strong>Accepts GPay:</strong> ${stall.acceptsGpay ? "Yes" : "No"}</p>
-        `;
+            <p><strong>Report Count:</strong> ${stall.reportCount !== undefined ? stall.reportCount : 'N/A'}</p> `;
 
         hygieneRatingSpan.textContent = stall.hygieneRating ? `${stall.hygieneRating.toFixed(1)}` : 'N/A';
         overallTasteRatingSpan.textContent = stall.tasteRating ? `${stall.tasteRating.toFixed(1)}` : 'N/A';
@@ -97,21 +104,21 @@ async function getStallDetails() {
                     const dist = haversineDistance(userLat, userLng, stallLat, stallLng);
                     distanceSpan.textContent = `${dist} km`;
                     mapLink.textContent = '📍 View on Map';
-                    mapLink.href = `https://www.google.com/maps/dir/${userLat},${userLng}/${stallLat},${stallLng}`;
+                    mapLink.href = `http://maps.google.com/maps?saddr=${userLat},${userLng}&daddr=${stallLat},${stallLng}`; // Corrected Google Maps URL
                 },
                 (error) => {
                     console.error("Error getting user location for distance:", error);
                     distanceSpan.textContent = "N/A (Couldn't get your location)";
                     mapLink.textContent = '📍 View Stall on Map';
-                    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${stallLat},${stallLng}`;
+                    mapLink.href = `http://maps.google.com/maps?q=${stallLat},${stallLng}`; 
                 },
                 { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         } else {
             distanceSpan.textContent = "N/A (Stall location or Geolocation not available)";
             if(stallLat && stallLng){
-                 mapLink.textContent = '📍 View Stall on Map';
-                 mapLink.href = `https://www.google.com/maps/search/?api=1&query=${stallLat},${stallLng}`;
+                mapLink.textContent = '📍 View Stall on Map';
+                mapLink.href = `http://maps.google.com/maps?q=${stallLat},${stallLng}`; 
             } else {
                 mapLink.textContent = ''; 
             }
@@ -164,7 +171,7 @@ reviewForm.addEventListener("submit", async (e) => {
                 "Authorization": `Bearer ${token}`,
             },
             body: JSON.stringify({
-                // emoji: "⭐", // You can add UI for emoji selection later
+                // emoji: "⭐", 
                 text: reviewText,
                 rating,
                 firstTime,
@@ -184,5 +191,70 @@ reviewForm.addEventListener("submit", async (e) => {
     } catch (err) {
         console.error("Error submitting review:", err);
         alert(`Error: ${err.message}`);
+    }
+});
+
+
+reportStallBtn.addEventListener("click", () => {
+    // Only show modal if user is logged in
+    if (!token) {
+        alert("You need to be logged in to report a stall.");
+        window.location.href = "/login.html"; 
+        return;
+    }
+    reportModal.style.display = "flex"; // Use flex to center the modal
+});
+
+// Close modal when close button is clicked
+closeButton.addEventListener("click", () => {
+    reportModal.style.display = "none";
+    reportForm.reset(); 
+});
+
+window.addEventListener("click", (event) => {
+    if (event.target === reportModal) {
+        reportModal.style.display = "none";
+        reportForm.reset(); 
+    }
+});
+
+reportForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!token) {
+        alert("You need to be logged in to report a stall.");
+        window.location.href = "/login.html";
+        return;
+    }
+
+    const reason = reportReasonInput.value.trim();
+    if (!reason) {
+        alert("Please provide a reason for reporting.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BASE_API_URL}/api/stalls/${stallId}/report`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ reason }),
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || "Failed to submit report.");
+        }
+
+        const successData = await res.json();
+        alert(`Report submitted successfully! Current report count: ${successData.currentReportCount}`);
+        reportModal.style.display = "none"; // Hide modal
+        reportForm.reset(); 
+        getStallDetails(); 
+    } catch (error) {
+        console.error("Error submitting report:", error);
+        alert(`Error submitting report: ${error.message}`);
     }
 });
