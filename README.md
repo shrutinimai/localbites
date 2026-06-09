@@ -1,156 +1,161 @@
-# localbites
-=============
+# LocalBites 🍲
+
+A community-driven, full-stack food stall discovery platform that connects food enthusiasts with authentic local street food stalls. Built with Node.js, Express.js, MongoDB, and React — deployed with a live backend on Render and frontend on Netlify.
+
+---
+
 ## Live Project Links
-======================
 
+- **Frontend Demo:** https://687b91f44115fb827ea6fffd--localbitez.netlify.app/
+- **Backend API Base URL:** https://localbites-2.onrender.com
+- **Demo Video:** https://drive.google.com/file/d/1XWTqePfx42JGEb9KcShtjt7s1r29UT5T/view?usp=drive_link
 
-* **Live Frontend Demo:** https://687b91f44115fb827ea6fffd--localbitez.netlify.app/
+> **Note:** The backend is hosted on Render's free tier. If it hasn't received traffic recently, the first request may take 30–60 seconds to wake up. Subsequent requests will be fast.
 
-* **Live Backend API:** https://localbites-2.onrender.com
-(Note: This is the API base URL, not necessarily a browsable page)
+---
 
-## Demo Video
-==============
+## Problem Statement
 
-* **Watch the Demo Video:** :https://drive.google.com/file/d/1XWTqePfx42JGEb9KcShtjt7s1r29UT5T/view?usp=drive_link
+In many cities, finding authentic, hygienic, and budget-friendly local food stalls is difficult. People miss out on hidden gems and rely entirely on word-of-mouth. There is no centralized platform where the community can discover, verify, and review street food stalls — especially lesser-known ones that don't have a social media presence.
 
+---
 
-## Project Overview
-=====================
+## Solution
 
-### Problem Solved
-==========================
+LocalBites gives local food stalls a digital presence and lets the community vouch for them. Users can discover stalls by city or food category, view detailed profiles with images and menus, leave ratings and reviews, and report inaccurate or misleading listings. Stall owners can register and manage their own stall profiles.
 
-In bustling cities like even new cities or some places, finding authentic, hygienic, and lesser-known local food stalls can be a challenge. Tourists and even locals often rely on word-of-mouth or miss out on hidden gems. There's a lack of a centralized platform that provides detailed information, including real-time updates on hygiene and taste, directly from the community.
+---
 
-### ✨ Solution
-===================
+## Features
 
-**LocalBites** is a community-driven platform designed to connect food enthusiasts with the best local street food stalls even some stalls are famous for its traditions they dont have fancy or promotive names. It allows users to discover, rate, and review stalls based on crucial factors like hygiene and taste, ensuring a transparent and reliable experience. Stall owners or foodies can easily add new stalls, fostering a dynamic and comprehensive guide to the local food scene.Even a person is missing their traditional food can get easily ..its not easy to know what food is famous on the residing area ...we can also have some idea on nearby food stalls or shops available that are budget friendly and may be some cant be popular or they may preserve their popularity...This also could be  the vibe of craze for food lovers and explorers to know their surroundings abt the food and also could be great oppurtunity for local shop owners to promote their shops without need of any fancy influenecers...the images provides the chance of good view of food as there can be name variations from one place to other but food remain same, so images of food  can be very helpful ..and if any kind of malinformation regarding stalls, location or hygienic or anyreasons  can be reported and one can easily view the report count also.
- 
-###  Key Features
-===================
+- **User Authentication** — Secure registration and login with role-based access (Foodie vs. Stall Owner) using JWT and Bcrypt
+- **Stall Profiles** — Each stall displays name, location (city, area), food categories, menu, timings, price range, and GPay acceptance
+- **Image Upload** — Cloudinary integration for cloud-based image storage and CDN delivery; Multer handles multipart uploads
+- **Ratings & Reviews** — Emoji reactions, text reviews, hygiene and taste ratings, and first-time vs. repeat visit tracking
+- **Aggregated Ratings** — MongoDB aggregation pipeline computes dynamic stall-level rating scores from all user submissions in real time
+- **Reporting System** — Users can report stalls for misinformation; report count is visible and triggers admin alerts at a set threshold
+- **Search & Filter** — Find stalls by name, city, or food category
+- **Pagination** — Efficient browsing across large stall listings
 
-* **User Authentication:** Secure user registration and login (foodie/stall owner roles).
-* **Stall Management:**
-    * **Add New Stalls:** Users can contribute by adding new food stall listings with essential details and an image.
-    * **Detailed Stall Profiles:** Each stall has a dedicated page displaying its name, owner, location (city, area), food categories, menu items, description, timings, price range, and GPay acceptance.
-    * **Image Upload:** Seamless integration with Cloudinary for secure image storage.
-* **Interactive Ratings & Reviews:**
-    * Users can react to stalls with emojis and text reviews.
-    * Track first-time vs. repeat visits.
-    * Display aggregated hygiene and taste ratings.
-* **Reporting System:** Users can report stalls for review, ensuring community standards and quality control. (Includes a threshold for admin alerts).
-* **Search & Filter:** Efficiently find stalls by name, city, or food category.
-* **Pagination:** Browse through stall listings efficiently with pagination.
+---
 
-## Technologies Used
-======================
+## Tech Stack
 
 ### Backend
-==============
-* **Node.js:** JavaScript runtime environment.
-* **Express.js:** Web application framework for Node.js.
-* **MongoDB:** NoSQL database for flexible data storage.
-* **Mongoose:** ODM (Object Data Modeling) library for MongoDB and Node.js.
-* **JSON Web Tokens (JWT):** For secure user authentication and authorization.
-* **Multer:** Middleware for handling `multipart/form-data` (primarily for file uploads).
-* **Multer-Storage-Cloudinary:** Multer storage engine for uploading files directly to Cloudinary.
-* **Cloudinary:** Cloud-based image and video management service.
-* **Bcrypt.js:** For password hashing and security.
-* **Dotenv:** For managing environment variables.
+| Technology | Purpose |
+|---|---|
+| Node.js | JavaScript runtime |
+| Express.js | Web framework and API routing |
+| MongoDB Atlas | Primary database (document store) |
+| Mongoose | ODM for schema definition and queries |
+| JWT | Stateless user authentication |
+| Bcrypt.js | Password hashing |
+| Multer | Multipart file upload handling |
+| Cloudinary | Cloud image storage and CDN delivery |
+| Dotenv | Environment variable management |
 
 ### Frontend
-================
-
-* **HTML5 / CSS3:** For structuring and styling the web application.
-* **JavaScript (ES6+):** For interactive functionality.
-* **CSS Framework :** css for styling the webpage
+| Technology | Purpose |
+|---|---|
+| HTML5 / CSS3 | Structure and styling |
+| JavaScript (ES6+) | Dynamic UI and API communication |
 
 ### Deployment
-===============
-* **Render:** For deploying the backend API.
-* **Vercel:** For deploying the frontend application.
-* **GitHub:** Version control.
+| Service | Purpose |
+|---|---|
+| Render | Backend API hosting |
+| Netlify | Frontend hosting |
+| GitHub | Version control |
+
+---
+
+## Project Structure
+
+```
+localbites/
+├── backend/
+│   ├── controllers/     # Route handler logic
+│   ├── models/          # Mongoose schemas (User, Stall, Review, etc.)
+│   ├── routes/          # Express API routes
+│   ├── middleware/       # JWT auth and input validation
+│   ├── config/          # Database and Cloudinary configuration
+│   └── server.js        # App entry point
+├── frontend/
+│   ├── index.html       # Landing page
+│   ├── css/             # Stylesheets
+│   └── js/              # Frontend JavaScript modules
+└── README.md
+```
+
+---
 
 ## How to Run Locally
-=========================
-
-To run this project on your local machine, follow these steps:
 
 ### Prerequisites
-==================
 
-* Node.js
-* npm 
-* MongoDB Atlas Account (for a free cloud database) or a local MongoDB instance
-* Cloudinary Account (for image storage)
+- Node.js (v16+)
+- npm
+- MongoDB Atlas account (or local MongoDB instance)
+- Cloudinary account
 
-### 
-1.clone the repository
-===========================
+### Steps
 
-git clone : GitHub URL: https://github.com/shrutinimai/localbites
+```bash
+# 1. Clone the repository
+git clone https://github.com/shrutinimai/localbites.git
+cd localbites
+```
 
-Repository Name: localbites
-cd [repo-name]
+#### Backend Setup
 
-2. Backend Setup
+```bash
 cd backend
 npm install
+```
 
-3.Create a .env file in the backend directory with your actual secret values:
+Create a `.env` file inside the `backend/` directory:
 
+```env
 PORT=5000
-MONGO_URI=[Your MongoDB Connection String from MongoDB Atlas]
-JWT_SECRET=[A strong, random secret string for JWT]
-CLOUDINARY_CLOUD_NAME=[Your Cloudinary Cloud Name]
-CLOUDINARY_API_KEY=[Your Cloudinary API Key]
-CLOUDINARY_API_SECRET=[Your Cloudinary API Secret]
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+```
 
-4.Then, start the backend server:
+```bash
 npm start
+# Backend runs at http://localhost:5000
+```
 
-5.Frontend Setup
-Open a new terminal and navigate to the frontend directory:
+#### Frontend Setup
+
+```bash
 cd ../frontend
-npm install
+```
 
-Navigate to the backend directory:
-cd backend
-npm install
+Open `index.html` directly in your browser, or use a local server:
 
-Create a .env file in the backend directory with your actual secret values:
-PORT= [value of port]
-MONGO_URI=[Your MongoDB Connection String from MongoDB Atlas]
-JWT_SECRET=[A strong, random secret string for JWT]
-CLOUDINARY_CLOUD_NAME=[Your Cloudinary Cloud Name]
-CLOUDINARY_API_KEY=[Your Cloudinary API Key]
-CLOUDINARY_API_SECRET=[Your Cloudinary API Secret]
-Then, start the backend server:
-npm start
-The backend server should start on http://localhost:[PORT]
+```bash
+# Using VS Code Live Server, or:
+npx serve .
+```
 
+Make sure the API base URL in your frontend JS points to `http://localhost:5000/api` when running locally, and to `https://localbites-2.onrender.com/api` when deployed.
 
-3.API Base URL Configuration:
+---
 
-Ensure that the JavaScript code in your frontend that makes API calls is pointing to your backend. When running locally, it should point to http://localhost:PORT/api. When deployed on Vercel, it should point to your live Render backend URL (https://localbites-2.onrender.com/api). You might manage this by having a simple JavaScript variable that you change for local vs. deployed environments, or use Vercel's environment variables.
+## Key Implementation Highlights
 
-To open the frontend locally:
+- **Stateless JWT authentication** — tokens are verified on every protected route via middleware; no server-side sessions
+- **MongoDB Aggregation Pipeline** — used to compute real-time average hygiene and taste scores per stall from all user reviews
+- **Cloudinary CDN pipeline** — binary image data never touches the application server; Multer streams it directly to Cloudinary
+- **Role-based middleware** — Stall Owner routes are protected separately from general user routes
+- **Report threshold system** — stalls that exceed a defined report count trigger an admin alert, keeping community data quality high
 
-Simply open your index.html file in your web browser:
+---
 
-# From the 'frontend' directory
-open index.html  # For macOS
-# or
-start index.html # For Windows
-# (Alternatively, simply double-click index.html in your file explorer)
-The frontend application should open in your browser.
+## Acknowledgements
 
-
-Acknowledgments
-My mentor for guidance.
-
-Sharpener.tech for this capstone opportunity.
-
-
+Built as a capstone project at Sharpener.tech.
